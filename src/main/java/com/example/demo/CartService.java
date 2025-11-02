@@ -1,0 +1,47 @@
+package com.example.demo;
+
+import com.example.demo.Book;
+import com.example.demo.BookRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@Service
+public class CartService {
+
+    private final BookRepository books;
+
+    public CartService(BookRepository books) {
+        this.books = books;
+    }
+
+    // Adds a book by ID; increments quantity if already exists
+    public Map<Long, Integer> add(Map<Long, Integer> cart, Long bookId) {
+        books.findById(bookId).orElseThrow();
+        cart.merge(bookId, 1, Integer::sum);
+        return cart;
+    }
+
+    // Removes or decrements a book by ID
+    public Map<Long, Integer> remove(Map<Long, Integer> cart, Long bookId) {
+        cart.computeIfPresent(bookId, (k, v) -> v > 1 ? v - 1 : null);
+        return cart;
+    }
+
+    // Calculates total price
+    public double total(Map<Long, Integer> cart) {
+        return cart.entrySet().stream()
+                .mapToDouble(e ->
+                        books.findById(e.getKey()).orElseThrow().getPrice() * e.getValue())
+                .sum();
+    }
+
+    // Converts ID-quantity pairs to Book-quantity pairs
+    public Map<Book, Integer> detailed(Map<Long, Integer> cart) {
+        Map<Book, Integer> result = new LinkedHashMap<>();
+        cart.forEach((id, qty) ->
+                result.put(books.findById(id).orElseThrow(), qty));
+        return result;
+    }
+}
