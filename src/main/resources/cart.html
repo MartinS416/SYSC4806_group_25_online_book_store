@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Your Cart</title>
+</head>
+<body>
+<h1>Your Cart</h1>
+<table border="1" cellpadding="5">
+    <thead>
+    <tr>
+        <th>Title</th><th>Qty</th><th>Price ($)</th><th>Subtotal ($)</th><th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${items}">
+        <td th:text="${entry.key.title}"></td>
+        <td th:text="${entry.value}"></td>
+        <td th:text="${#numbers.formatDecimal(entry.key.price,1,2)}"></td>
+        <td th:text="${#numbers.formatDecimal(entry.key.price * entry.value,1,2)}"></td>
+        <td>
+            <form th:action="@{'/cart/remove/' + ${entry.key.id}}" method="post">
+                <button type="submit">Remove</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h3>Total: <span th:text="${#numbers.formatDecimal(total,1,2)}"></span> $</h3>
+
+<p><a th:href="@{/books}">Continue Shopping</a></p>
+<form th:action="@{/cart/clear}" method="post">
+    <button type="submit">Clear Cart</button>
+</form>
+</body>
+</html>

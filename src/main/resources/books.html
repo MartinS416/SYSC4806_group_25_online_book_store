@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Books</title>
+</head>
+<body>
+<h1>Available Books</h1>
+<table border="1" cellpadding="5">
+    <thead>
+    <tr><th>Title</th><th>Author</th><th>Price ($)</th><th>Add</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="b : ${books}">
+        <td th:text="${b.title}"></td>
+        <td th:text="${b.author}"></td>
+        <td th:text="${#numbers.formatDecimal(b.price,1,2)}"></td>
+        <td>
+            <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
+                <button type="submit">Add to Cart</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<p><a th:href="@{/cart}">Go to Cart</a></p>
+</body>
+</html>
