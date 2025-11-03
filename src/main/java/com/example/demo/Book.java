@@ -13,14 +13,16 @@ public class Book {
     private String author;
     private double price;
     private String category;
+    private int stock;
 
     public Book() {}
 
-    public Book(String title, String author, double price, String category) {
+    public Book(String title, String author, double price, String category, int stock) {
         this.title = title;
         this.author = author;
         this.price = price;
         this.category = category;
+        this.stock = stock;
     }
 
     public Long getId() { return id; }
@@ -28,10 +30,12 @@ public class Book {
     public String getAuthor() { return author; }
     public double getPrice() { return price; }
     public String getCategory() { return category; }
+    public int getStock() { return stock; }
 
     public void setId(Long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setAuthor(String author) { this.author = author; }
     public void setPrice(double price) { this.price = price; }
     public void setCategory(String category) { this.category = category; }
+    public void setStock(int stock) {this.stock = stock; }
 }
