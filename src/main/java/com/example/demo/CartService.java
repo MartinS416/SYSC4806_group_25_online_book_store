@@ -44,4 +44,15 @@ public class CartService {
                 result.put(books.findById(id).orElseThrow(), qty));
         return result;
     }
+
+    //Simple process payment method, to be changed later, just updates the stock of the book and clears the session to empty the cart.
+    public void processPayment(Map<Long, Integer> cart) {
+        cart.forEach((bookId,qty)->{
+            books.findById(bookId).ifPresent(book-> {
+                int stock = Math.max(0, book.getStock() -qty);
+                book.setStock(stock);
+                books.save(book);
+            });
+        });
+    }
 }
