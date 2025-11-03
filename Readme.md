@@ -40,10 +40,10 @@ Clone repo and ensure you are running java 21 sdk
 
 ## Authors
 
-Bains, Yuvraj
-Lavji, Fareen
-Muziel, Yousif
-Skachkov, Martin
+Bains, Yuvraj\
+Lavji, Fareen\
+Muziel, Yousif\
+Skachkov, Martin\
 Tucker, James
 
 ## Version History
