@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 /**
  * Defines addresses that are stored within a customer's profile and extracted for shipping.
@@ -11,6 +10,10 @@ public class Address {
 
     @Id
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id",  nullable = false)
+    private Customer customer;
 
     private String firstName;
     private String lastName;

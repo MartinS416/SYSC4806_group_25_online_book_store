@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
 
 /**
@@ -20,14 +19,14 @@ public class Customer {
     private String lastName;
     private String phone;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private ArrayList<Order> orderInfos = new ArrayList<>();
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final ArrayList<Order> orderInfos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "customer")
-    private ArrayList<Cart> carts = new ArrayList<>();
+    @OneToMany(mappedBy = "customer",  cascade = CascadeType.ALL, orphanRemoval = true)
+    private final ArrayList<Cart> carts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "customer")
-    private ArrayList<Address> addresses = new ArrayList<>();
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final ArrayList<Address> addresses = new ArrayList<>();
 
     // CONSTRUCTORS //
     public Customer() {
@@ -50,6 +49,9 @@ public class Customer {
     public String getFirstName() {  return firstName; }
     public String getLastName() {  return lastName; }
     public String getPhone() { return phone; }
+    public ArrayList<Order> getOrderInfos() {  return orderInfos; }
+    public ArrayList<Cart> getCarts() {  return carts; }
+    public ArrayList<Address> getAddresses() {  return addresses; }
 
     // SETTERS //
     public void setId(Long id) { this.id = id; }
@@ -59,4 +61,25 @@ public class Customer {
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    // DB Management //
+    public void addOrderInfo(Order order) { orderInfos.add(order); }
+    public void addCart(Cart cart) { carts.add(cart); }
+    public void addAddress(Address address) { addresses.add(address); }
+
+    public void getOrderInfo(int orderNumber) { orderInfos.get(orderNumber); }
+    public void getOrderInfo(Order order) { orderInfos.get(orderInfos.indexOf(order)); }
+    public void removeCart(Cart cart) { carts.remove(cart); }
+    public void removeAddress(Address address) { addresses.remove(address); }
+
+    // PRIVATE //
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "customerId=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
+    }
 }
