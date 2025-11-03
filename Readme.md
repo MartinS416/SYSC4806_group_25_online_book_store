@@ -31,7 +31,7 @@ Clone repo and ensure you are running java 21 sdk
 
 ### Executing program
 
-* go to [add azure link her]
+* go to https://onlinebookstore-g4f7cxdtfgdpetgf.westus3-01.azurewebsites.net/
 * alternatively run OnlineBookStoreApplication then go to localhost
 
 ## Help
