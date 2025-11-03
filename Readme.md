@@ -11,7 +11,13 @@ there are two distinct users of this service:
 
 - the bookstore customer is able to add books to their cart and purchase them
 
+## Schema
+
+![Logo](InitalSchema.png)
+
 ## Getting Started
+
+Clone repo and ensure you are running java 21 sdk
 
 ### Dependencies
 
@@ -34,10 +40,10 @@ there are two distinct users of this service:
 
 ## Authors
 
-Bains, Yuvraj
-Lavji, Fareen
-Muziel, Yousif
-Skachkov, Martin
+Bains, Yuvraj\
+Lavji, Fareen\
+Muziel, Yousif\
+Skachkov, Martin\
 Tucker, James
 
 ## Version History
