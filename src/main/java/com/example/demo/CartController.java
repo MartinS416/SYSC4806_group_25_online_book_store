@@ -33,14 +33,14 @@ public class CartController {
     @GetMapping("/books")
     public String listBooks(Model model) {
         model.addAttribute("books", books.findAll());
-        return "books";
+        return "shop";
     }
 
     // Add a book to cart
     @PostMapping("/cart/add/{id}")
     public String add(@PathVariable Long id, @ModelAttribute("cart") Map<Long, Integer> cart) {
         cartService.add(cart, id);
-        return "redirect:/cart";
+        return "redirect:/shop";
     }
 
     // Remove or decrement a book from cart
@@ -62,6 +62,13 @@ public class CartController {
     @PostMapping("/cart/clear")
     public String clear(SessionStatus status) {
         status.setComplete();
-        return "redirect:/books";
+        return "redirect:/shop";
+    }
+
+    @PostMapping("/cart/pay")
+    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status) {
+        cartService.processPayment(cart);
+        status.setComplete();
+        return "redirect:/shop?paid=true";
     }
 }
