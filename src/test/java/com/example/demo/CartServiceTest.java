@@ -26,13 +26,13 @@ class CartServiceTest {
     @InjectMocks
     CartService cartService;
 
-    private Map<Long,Integer> cart;
+    private Map<Long, Integer> cart;
 
     private static Book book(long id, String title, double price, int stock) {
         Book b = new Book();
         b.setId(id);
         b.setTitle(title);
-        b.setPrice(price);   // double in your model
+        b.setPrice(price);   // your model uses double
         b.setStock(stock);
         return b;
     }
@@ -54,7 +54,6 @@ class CartServiceTest {
 
         assertEquals(1, result.size());
         assertEquals(1, result.get(1L));
-        // ensure same instance (method mutates and returns the same map)
         assertSame(cart, result);
     }
 
@@ -62,8 +61,7 @@ class CartServiceTest {
     @DisplayName("add: increments existing quantity")
     void add_incrementsExisting() {
         cart.put(2L, 2);
-        Book ddd = book(2L, "DDD", 60.0, 5);
-        when(bookRepository.findById(2L)).thenReturn(Optional.of(ddd));
+        when(bookRepository.findById(2L)).thenReturn(Optional.of(book(2L, "DDD", 60.0, 5)));
 
         cartService.add(cart, 2L);
 
@@ -74,13 +72,11 @@ class CartServiceTest {
     @DisplayName("remove: decrements quantity; removes entry when it reaches zero")
     void remove_decrementsAndRemoves() {
         cart.put(3L, 2);
-        when(bookRepository.findById(3L)).thenReturn(Optional.of(book(3L, "Refactoring", 50.0, 7)));
 
-        // first remove -> qty 1
+        // no repository calls inside remove() -> no stubbing here
         cartService.remove(cart, 3L);
         assertEquals(1, cart.get(3L));
 
-        // second remove -> gone
         cartService.remove(cart, 3L);
         assertFalse(cart.containsKey(3L));
     }
@@ -105,7 +101,7 @@ class CartServiceTest {
 
         double total = cartService.total(cart);
 
-        assertEquals(141.0, total, 1e-9); // 30 + 111 = 141
+        assertEquals(141.0, total, 1e-9);
     }
 
     // ---------------------- detailed ----------------------
@@ -137,7 +133,7 @@ class CartServiceTest {
         cart.put(31L, 10);
 
         Book b30 = book(30L, "Algorithms", 70.0, 5);   // 5 -> 3
-        Book b31 = book(31L, "Tiny Stock", 10.0, 6);    // 6 -> 0 (not negative)
+        Book b31 = book(31L, "Tiny Stock", 10.0, 6);    // 6 -> 0
 
         when(bookRepository.findById(30L)).thenReturn(Optional.of(b30));
         when(bookRepository.findById(31L)).thenReturn(Optional.of(b31));
@@ -148,16 +144,15 @@ class CartServiceTest {
         ArgumentCaptor<Book> captor = ArgumentCaptor.forClass(Book.class);
         verify(bookRepository, times(2)).save(captor.capture());
 
-        // order of saves not guaranteed; check both
         boolean saw30 = false, saw31 = false;
         for (Book b : captor.getAllValues()) {
             if (b.getId() == 30L) { assertEquals(3, b.getStock()); saw30 = true; }
             if (b.getId() == 31L) { assertEquals(0, b.getStock()); saw31 = true; }
         }
-        assertTrue(saw30 && saw31, "Both books should have been saved with updated stock");
+        assertTrue(saw30 && saw31);
     }
 
-    // ---------------------- edge: total/detailed missing id ----------------------
+    // ---------------------- edge: missing ids ----------------------
 
     @Nested
     class MissingIdEdges {
