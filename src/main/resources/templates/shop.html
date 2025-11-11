@@ -39,6 +39,10 @@
                         <strong>Category:</strong> <span th:text="${b.category}">Category</span><br>
                         <strong>Stock:</strong> <span th:text="${b.stock}">0</span>
                     </p>
+
+                    <!-- ✅ NEW LINE: Link to view book details -->
+                    <a th:href="@{'/books/' + ${b.id}}" class="btn btn-outline-dark w-50 mb-2">View Details</a>
+
                     <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
                         <button type="submit" class="btn w-50 text-white border-0" style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">Add to Cart</button>
                     </form>
@@ -47,9 +51,11 @@
         </div>
     </div>
 </div>
+
 <p th:if="${param.paid}" class="alert alert-success text-center">
     Payment successful! Thank you for your purchase.
 </p>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
