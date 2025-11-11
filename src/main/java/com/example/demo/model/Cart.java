@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-
 import java.time.Instant;
 
 @Entity
@@ -28,8 +27,11 @@ public class Cart {
     public Long getId() { return id; }
     public Customer getCustomer() { return customer; }
     public boolean isActive() { return active; }
+    public Instant getCreatedAt() { return createdAt; }
 
     // SETTERS //
     public void setCustomer(Customer customer) { this.customer = customer; }
-    public void setActive(boolean active) { this.active = active; }
+    public void activate() { this.active = true; }
+    public void deactivate() { this.active = false; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

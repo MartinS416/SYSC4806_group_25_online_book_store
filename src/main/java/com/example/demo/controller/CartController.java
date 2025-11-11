@@ -1,13 +1,12 @@
-package com.example.demo;
+package com.example.demo.controller;
 
-import com.example.demo.BookRepository;
-import com.example.demo.CartService;
+import com.example.demo.repository.BookRepository;
+import com.example.demo.service.CartService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.bind.annotation.SessionAttributes;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,14 +35,14 @@ public class CartController {
         return "shop";
     }
 
-    // Add a book to cart
+    // Add a book to the cart
     @PostMapping("/cart/add/{id}")
     public String add(@PathVariable Long id, @ModelAttribute("cart") Map<Long, Integer> cart) {
         cartService.add(cart, id);
         return "redirect:/shop";
     }
 
-    // Remove or decrement a book from cart
+    // Remove or decrement a book from a cart
     @PostMapping("/cart/remove/{id}")
     public String remove(@PathVariable Long id, @ModelAttribute("cart") Map<Long, Integer> cart) {
         cartService.remove(cart, id);

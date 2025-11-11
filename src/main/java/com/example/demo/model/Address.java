@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 public class Address {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,6 +47,7 @@ public class Address {
 
     // GETTERS //
     public Long getId() { return id; }
+    public Customer getCustomer() { return customer; }
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getStreet() { return street; }
@@ -56,7 +58,7 @@ public class Address {
     public String getCountry() { return country; }
 
     // SETTERS //
-    public void setId(Long id) { this.id = id; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
     public void setStreet(String street) { this.street = street; }
