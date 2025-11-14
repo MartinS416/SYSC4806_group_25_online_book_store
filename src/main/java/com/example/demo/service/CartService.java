@@ -1,58 +1,156 @@
 package com.example.demo.service;
 
-import com.example.demo.model.Book;
+import com.example.demo.model.*;
 import com.example.demo.repository.BookRepository;
+import com.example.demo.repository.CartItemRepository;
+import com.example.demo.repository.CartRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
+@Transactional
 public class CartService {
 
-    private final BookRepository books;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final BookRepository bookRepository;
+    private final OrderService orderService;
 
-    public CartService(BookRepository books) {
-        this.books = books;
+    /**
+     * Constructor.
+     *
+     * @param cartRepository Live Repo of Carts.
+     * @param cartItemRepository Live Repo of CartItems.
+     * @param bookRepository Live Repo of Books.
+     * @param orderService Service for creating Orders.
+     */
+    public CartService(CartRepository cartRepository,
+                       CartItemRepository cartItemRepository,
+                       BookRepository bookRepository,
+                       OrderService orderService) {
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.bookRepository = bookRepository;
+        this.orderService = orderService;
     }
 
-    // Adds a book by ID; increments quantity if already exists
-    public Map<Long, Integer> add(Map<Long, Integer> cart, Long bookId) {
-        books.findById(bookId).orElseThrow();
-        cart.merge(bookId, 1, Integer::sum);
-        return cart;
+    /**
+     * Add item to the cart.
+     * @param cart The cart to add item to.
+     * @param bookId The ID of the book to add.
+     * @param quantity The quantity of the book to add.
+     */
+    public void addItem(Cart cart, Long bookId, int quantity) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        CartItem existingItem = cart.getItems().stream()
+                .filter(i -> i.getBook().getId().equals(bookId))
+                .findFirst()
+                .orElse(null);
+
+        if (existingItem != null) {
+            existingItem.setQuantity(existingItem.getQuantity() + quantity);
+        } else {
+            CartItem item = new CartItem(cart, book, quantity);
+            cart.addItem(item);
+            cartItemRepository.save(item);
+        }
+
+        cartRepository.save(cart);
     }
 
-    // Removes or decrements a book by ID
-    public Map<Long, Integer> remove(Map<Long, Integer> cart, Long bookId) {
-        cart.computeIfPresent(bookId, (k, v) -> v > 1 ? v - 1 : null);
-        return cart;
+    /**
+     * Remove item from the cart.
+     *
+     * @param cart The cart to remove item from.
+     * @param bookId The ID of the book to remove.
+     * @param quantity The quantity of the book to remove.
+     */
+    public void removeItem(Cart cart, Long bookId, int quantity) {
+        cart.getItems().stream()
+                .filter(i -> i.getBook().getId().equals(bookId))
+                .findFirst()
+                .ifPresent(item -> {
+                    int remaining = item.getQuantity() - quantity;
+                    if (remaining > 0) {
+                        item.setQuantity(remaining);
+                    } else {
+                        cart.removeItem(item);
+                        cartItemRepository.delete(item);
+                    }
+                });
+
+        cartRepository.save(cart);
     }
 
-    // Calculates total price
-    public double total(Map<Long, Integer> cart) {
-        return cart.entrySet().stream()
-                .mapToDouble(e ->
-                        books.findById(e.getKey()).orElseThrow().getPrice() * e.getValue())
+    /**
+     * Calculate the total price of cart items.
+     *
+     * @param cart The cart to calculate the total price of.
+     * @return The total price of the cart items.
+     */
+    public double total(Cart cart) {
+        return cart.getItems().stream()
+                .mapToDouble(i -> i.getBook().getPrice() * i.getQuantity())
                 .sum();
     }
 
-    // Converts ID-quantity pairs to Book-quantity pairs
-    public Map<Book, Integer> detailed(Map<Long, Integer> cart) {
+    /**
+     * Detailed mapping: Book -> quantity
+     *
+     * @param cart The cart to map.
+     * @return Hashmap of Books and associated quantities.
+     */
+    public Map<Book, Integer> detailed(Cart cart) {
         Map<Book, Integer> result = new LinkedHashMap<>();
-        cart.forEach((id, qty) ->
-                result.put(books.findById(id).orElseThrow(), qty));
+        cart.getItems().forEach(i -> result.put(i.getBook(), i.getQuantity()));
         return result;
     }
 
-    //Simple process payment method, to be changed later, just updates the stock of the book and clears the session to empty the cart.
-    public void processPayment(Map<Long, Integer> cart) {
-        cart.forEach((bookId,qty)->{
-            books.findById(bookId).ifPresent(book-> {
-                int stock = Math.max(0, book.getStock() -qty);
-                book.setStock(stock);
-                books.save(book);
-            });
+    /**
+     * Checkout: create Order with OrderLines, update stock, clear cart
+     *
+     * @param cartId Cart ID to attach the order line to.
+     * @return The newly created Order.
+     */
+    public Order checkout(Long cartId) {
+        Cart cart = cartRepository.findById(cartId).orElseThrow();
+        if (cart.getItems().isEmpty()) throw new IllegalStateException("Cart is empty");
+
+        // Create Order
+        Order order = new Order();
+        order.setCustomer(cart.getCustomer());
+
+        Order finalOrder = order;
+        cart.getItems().forEach(item -> {
+            // Update stock
+            Book book = item.getBook();
+            book.setStock(Math.max(0, book.getStock() - item.getQuantity()));
+            bookRepository.save(book);
+
+            // Create OrderLine
+            OrderLine orderLine = new OrderLine();
+            orderLine.setBook(book);
+            orderLine.setQuantity(item.getQuantity());
+            orderLine.setPrice(BigDecimal.valueOf(book.getPrice()));
+            orderLine.setOrder(finalOrder);
+            finalOrder.addOrderLine(orderLine);
         });
+
+        order = orderService.create(order); // persist Order
+
+        // Clear cart
+        cart.getItems().forEach(item -> {
+            cartItemRepository.delete(item);
+            item.setCart(null);
+        });
+        cart.getItems().clear();
+        cart.deactivate();
+        cartRepository.save(cart);
+
+        return order;
     }
 }

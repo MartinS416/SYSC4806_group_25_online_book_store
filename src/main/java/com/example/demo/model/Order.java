@@ -3,6 +3,8 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Defines customer orders to be completed by bookstore.
@@ -38,6 +40,10 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
+    // --- NEW: OrderLines ---
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderLine> orderLines = new ArrayList<>();
+
     // CONSTRUCTORS //
     public Order() {}
 
@@ -52,6 +58,7 @@ public class Order {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public Instant getCreatedAt() { return createdAt; }
     public Payment getPayment() { return payment; }
+    public List<OrderLine> getOrderLines() { return orderLines; }
 
     // SETTERS //
     public void setId(Long id) { this.id = id; }
@@ -64,4 +71,22 @@ public class Order {
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setPayment(Payment payment) { this.payment = payment; if (payment != null) payment.setOrder(this); }
+    public void setOrderLines(List<OrderLine> orderLines) { this.orderLines = orderLines; }
+
+    // ORDER LINE MANAGEMENT //
+    public void addOrderLine(OrderLine line) {
+        orderLines.add(line);
+        line.setOrder(this);
+
+        BigDecimal lineTotal = line.getPrice().multiply(BigDecimal.valueOf(line.getQuantity()));
+        totalAmount = totalAmount.add(lineTotal);
+    }
+
+    public void removeOrderLine(OrderLine line) {
+        orderLines.remove(line);
+        line.setOrder(null);
+
+        BigDecimal lineTotal = line.getPrice().multiply(BigDecimal.valueOf(line.getQuantity()));
+        totalAmount = totalAmount.subtract(lineTotal);
+    }
 }

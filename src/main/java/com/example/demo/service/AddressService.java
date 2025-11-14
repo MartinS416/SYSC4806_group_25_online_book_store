@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.model.Address;
 import com.example.demo.repository.AddressRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -14,42 +15,30 @@ public class AddressService {
         this.addressRepository = addressRepository;
     }
 
-    // CREATE / SAVE //
-    public Address save(Address address) {
-        return addressRepository.save(address);
-    }
+    public Address save(Address address) { return addressRepository.save(address); }
 
-    // READ (By ID) //
     public Address findById(Long id) {
-        return addressRepository.findById(id).orElse(null);
+        return addressRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Address not found: " + id));
     }
 
-    // READ (All) //
-    public List<Address> findAll() {
-        return addressRepository.findAll();
+    public List<Address> findAll() { return addressRepository.findAll(); }
+
+    public Address update(Long id, Address updated) {
+        Address a = findById(id);
+
+        a.setFirstName(updated.getFirstName());
+        a.setLastName(updated.getLastName());
+        a.setStreet(updated.getStreet());
+        a.setUnit(updated.getUnit());
+        a.setCity(updated.getCity());
+        a.setRegion(updated.getRegion());
+        a.setPostcode(updated.getPostcode());
+        a.setCountry(updated.getCountry());
+
+        return addressRepository.save(a);
     }
 
-    // UPDATE //
-    public Address update(Long id, Address updatedAddress) {
-        Address existing = findById(id);
-        if (existing == null) {
-            return null;
-        }
-
-        existing.setFirstName(updatedAddress.getFirstName());
-        existing.setLastName(updatedAddress.getLastName());
-        existing.setStreet(updatedAddress.getStreet());
-        existing.setUnit(updatedAddress.getUnit());
-        existing.setCity(updatedAddress.getCity());
-        existing.setRegion(updatedAddress.getRegion());
-        existing.setPostcode(updatedAddress.getPostcode());
-        existing.setCountry(updatedAddress.getCountry());
-        existing.setCustomer(updatedAddress.getCustomer());
-
-        return addressRepository.save(existing);
-    }
-
-    // DELETE //
     public void delete(Long id) {
         addressRepository.deleteById(id);
     }
