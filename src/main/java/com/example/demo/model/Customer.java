@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Defines bookstore customers and their commercial history.
@@ -20,17 +21,15 @@ public class Customer {
     private String phone;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final ArrayList<Order> orderInfos = new ArrayList<>();
-
-    @OneToMany(mappedBy = "customer",  cascade = CascadeType.ALL, orphanRemoval = true)
-    private final ArrayList<Cart> carts = new ArrayList<>();
+    private List<Order> orderInfos = new ArrayList<>();
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final ArrayList<Address> addresses = new ArrayList<>();
+    private List<Cart> carts = new ArrayList<>();
 
-    // CONSTRUCTORS //
-    public Customer() {
-    }
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
+    public Customer() {}
 
     public Customer(String username, String password, String email, String firstName, String lastName, String phone) {
         this.username = username;
@@ -41,6 +40,12 @@ public class Customer {
         this.phone = phone;
     }
 
+    public Customer(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
     // GETTERS //
     public Long getId() { return id; }
     public String getUsername() {  return username; }
@@ -49,9 +54,10 @@ public class Customer {
     public String getFirstName() {  return firstName; }
     public String getLastName() {  return lastName; }
     public String getPhone() { return phone; }
-    public ArrayList<Order> getOrderInfos() {  return orderInfos; }
-    public ArrayList<Cart> getCarts() {  return carts; }
-    public ArrayList<Address> getAddresses() {  return addresses; }
+    public List<Order> getOrderInfos() { return orderInfos; }
+    public List<Cart> getCarts() { return carts; }
+    public List<Address> getAddresses() { return addresses; }
+
 
     // SETTERS //
     public void setId(Long id) { this.id = id; }
