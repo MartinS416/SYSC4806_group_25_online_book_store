@@ -66,9 +66,14 @@ public class CartController {
     }
 
     @PostMapping("/cart/pay")
-    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status) {
-        cartService.processPayment(cart);
-        status.setComplete();
-        return "redirect:/shop?paid=true";
+    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status,
+                      @RequestParam("cardNumber") String cardNumber, @RequestParam("expiry") String expiry,
+                      @RequestParam("cvv") String cvv) {
+        if (cartService.processPayment(cart, cardNumber, expiry, cvv)) {
+            status.setComplete();
+            return "redirect:/shop?paid=true";
+        } else {
+            return "redirect:/cart";
+        }
     }
 }
