@@ -22,4 +22,9 @@ public class ShopController {
         model.addAttribute("books",books);
         return "shop";
     }
+
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/shop";
+    }
 }
