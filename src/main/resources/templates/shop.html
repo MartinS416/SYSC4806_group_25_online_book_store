@@ -8,7 +8,7 @@
 </head>
 <body class="bg-light">
 
-<!-- the navigation bar-->
+<!-- Navigation bar -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #CC0033;">
     <div class="container">
         <a class="navbar-brand" href="#">
@@ -30,38 +30,72 @@
     </div>
 </nav>
 
-<!-- This is the list of books -->
+<!-- Page container -->
 <div class="container mt-4">
+
+    <!-- Search Bar -->
+    <form action="/shop" method="get" class="d-flex mb-3">
+        <input type="text"
+               name="keyword"
+               class="form-control me-2"
+               placeholder="Search books..."
+               th:value="${keyword}">
+        <button type="submit"
+                class="btn text-white border-0"
+                style="background-color: #CC0033;">
+            Search
+        </button>
+    </form>
+
     <h2 class="mb-3">Available Books</h2>
 
-    <!-- If there are no books -->
+    <!-- If no books exist -->
     <p th:if="${#lists.isEmpty(books)}" class="text-muted">No books available.</p>
 
-    <!-- Here we display the books -->
+    <!-- Display books -->
     <div class="row" th:if="${!#lists.isEmpty(books)}">
         <div class="col-md-4 mb-3" th:each="b : ${books}">
             <div class="card h-110 shadow-sm">
+
                 <div class="card-body">
                     <h5 class="card-title" th:text="${b.title}">Book Title</h5>
+
                     <p class="card-text">
-                        <strong>Author:</strong> <span th:text="${b.author}">Author</span><br>
-                        <strong>Price:</strong> $<span th:text="${b.price}">0.00</span><br>
-                        <strong>Category:</strong> <span th:text="${b.category}">Category</span><br>
-                        <strong>Stock:</strong> <span th:text="${b.stock}">0</span>
+                        <strong>Author:</strong>
+                        <span th:text="${b.author}">Author</span><br>
+
+                        <strong>Price:</strong>
+                        $<span th:text="${b.price}">0.00</span><br>
+
+                        <strong>Category:</strong>
+                        <span th:text="${b.category}">Category</span><br>
+
+                        <strong>Stock:</strong>
+                        <span th:text="${b.stock}">0</span>
                     </p>
 
-                    <!-- ✅ NEW LINE: Link to view book details -->
-                    <a th:href="@{'/books/' + ${b.id}}" class="btn btn-outline-dark w-50 mb-2">View Details</a>
+                    <!-- View Details button -->
+                    <a th:href="@{'/books/' + ${b.id}}"
+                       class="btn btn-outline-dark w-50 mb-2">
+                        View Details
+                    </a>
 
+                    <!-- Add to Cart button -->
                     <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
-                        <button type="submit" class="btn w-50 text-white border-0" style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">Add to Cart</button>
+                        <button type="submit"
+                                class="btn w-50 text-white border-0"
+                                style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">
+                            Add to Cart
+                        </button>
                     </form>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Payment success message -->
 <p th:if="${param.paid}" class="alert alert-success text-center">
     Payment successful! Thank you for your purchase.
 </p>
