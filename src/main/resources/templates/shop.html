@@ -10,7 +10,7 @@
 <!-- the navigation bar-->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #CC0033;">
     <div class="container">
-        <a class="navbar-brand" href="#">Online Bookstore</a>
+        <a class="navbar-brand" href="/shop">Online Bookstore</a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link active" href="/shop">Shop</a></li>
@@ -20,35 +20,127 @@
     </div>
 </nav>
 
-<!-- This is the list of books -->
 <div class="container mt-4">
-    <h2 class="mb-3">Available Books</h2>
+    <div class="row">
 
-    <!-- If there are no books -->
-    <p th:if="${#lists.isEmpty(books)}" class="text-muted">No books available.</p>
-
-    <!-- Here we display the books -->
-    <div class="row" th:if="${!#lists.isEmpty(books)}">
-        <div class="col-md-4 mb-3" th:each="b : ${books}">
-            <div class="card h-110 shadow-sm">
+        <!-- LEFT: FILTERS -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title" th:text="${b.title}">Book Title</h5>
-                    <p class="card-text">
-                        <strong>Author:</strong> <span th:text="${b.author}">Author</span><br>
-                        <strong>Price:</strong> $<span th:text="${b.price}">0.00</span><br>
-                        <strong>Category:</strong> <span th:text="${b.category}">Category</span><br>
-                        <strong>Stock:</strong> <span th:text="${b.stock}">0</span>
-                    </p>
+                    <h5 class="card-title">Filters</h5>
+                    <form th:action="@{/shop}" method="get">
 
-                    <!-- ✅ NEW LINE: Link to view book details -->
-                    <a th:href="@{'/books/' + ${b.id}}" class="btn btn-outline-dark w-50 mb-2">View Details</a>
+                        <!-- Category filter -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <input id="category"
+                                   type="text"
+                                   name="category"
+                                   class="form-control"
+                                   placeholder="e.g. Fiction"
+                                   th:value="${selectedCategory}">
+                        </div>
 
-                    <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
-                        <button type="submit" class="btn w-50 text-white border-0" style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">Add to Cart</button>
+                        <!-- Price range -->
+                        <div class="mb-3">
+                            <label for="minPrice" class="form-label">Min price</label>
+                            <input id="minPrice"
+                                   type="number"
+                                   step="0.01"
+                                   name="minPrice"
+                                   class="form-control"
+                                   th:value="${minPrice}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="maxPrice" class="form-label">Max price</label>
+                            <input id="maxPrice"
+                                   type="number"
+                                   step="0.01"
+                                   name="maxPrice"
+                                   class="form-control"
+                                   th:value="${maxPrice}">
+                        </div>
+
+                        <!-- Stock filter -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="inStockOnly"
+                                   name="inStockOnly"
+                                   th:checked="${inStockOnly}">
+                            <label class="form-check-label" for="inStockOnly">
+                                In stock only
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn w-100 text-white border-0"
+                                style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">
+                            Apply filters
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- MIDDLE: LIST OF BOOKS -->
+        <div class="col-md-6 mb-3">
+            <h2 class="mb-3">Available Books</h2>
+
+            <!-- If there are no books -->
+            <p th:if="${#lists.isEmpty(books)}" class="text-muted">No books available.</p>
+
+            <!-- Here we display the books -->
+            <div class="row" th:if="${!#lists.isEmpty(books)}">
+                <div class="col-md-12 mb-3" th:each="b : ${books}">
+                    <div class="card h-110 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${b.title}">Book Title</h5>
+                            <p class="card-text">
+                                <strong>Author:</strong> <span th:text="${b.author}">Author</span><br>
+                                <strong>Price:</strong> $<span th:text="${b.price}">0.00</span><br>
+                                <strong>Category:</strong> <span th:text="${b.category}">Category</span><br>
+                                <strong>Stock:</strong> <span th:text="${b.stock}">0</span>
+                            </p>
+
+                            <a th:href="@{'/books/' + ${b.id}}" class="btn btn-outline-dark w-50 mb-2">
+                                View Details
+                            </a>
+
+                            <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
+                                <button type="submit"
+                                        class="btn w-50 text-white border-0"
+                                        style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">
+                                    Add to Cart
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: RECOMMENDATIONS -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Recommended for you</h5>
+
+                    <p th:if="${#lists.isEmpty(recommendedBooks)}" class="text-muted">
+                        No recommendations available yet.
+                    </p>
+
+                    <div th:each="r : ${recommendedBooks}" class="mb-3"
+                         th:if="${!#lists.isEmpty(recommendedBooks)}">
+                        <strong th:text="${r.title}">Title</strong><br>
+                        <span th:text="${r.author}">Author</span><br>
+                        <span>$</span><span th:text="${r.price}">0.00</span>
+                        <hr class="my-2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
