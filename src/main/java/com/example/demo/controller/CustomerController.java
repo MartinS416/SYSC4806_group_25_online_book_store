@@ -41,6 +41,10 @@ public class CustomerController {
     public Customer update(@PathVariable Long id, @RequestBody Customer input) {
         Customer existing = customers.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        return getCustomer(input, existing, customers);
+    }
+
+    public static Customer getCustomer(@RequestBody Customer input, Customer existing, CustomerRepository customers) {
         existing.setUsername(input.getUsername());
         existing.setPassword(input.getPassword());
         existing.setEmail(input.getEmail());

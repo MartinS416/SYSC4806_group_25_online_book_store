@@ -3,24 +3,31 @@ package com.example.demo.controller;
 import com.example.demo.model.Cart;
 import com.example.demo.model.Customer;
 import com.example.demo.repository.BookRepository;
-import com.example.demo.repository.CartRepository;
+import com.example.demo.repository.CustomerRepository;
+import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.CartService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.Map;
+
+/**
+ * Controller using a repository-backed CartService. No session Map-based methods here.
+ */
 @Controller
-@RequestMapping("/cart")
 public class CartController {
 
-    private final CartRepository cartRepository;
-    private final BookRepository bookRepository;
+    private final BookRepository books;
     private final CartService cartService;
+    private final CustomerRepository customerRepository;
 
-    public CartController(CartRepository cartRepository, BookRepository bookRepository, CartService cartService) {
-        this.cartRepository = cartRepository;
-        this.bookRepository = bookRepository;
+    public CartController(BookRepository books, CartService cartService, CustomerRepository customerRepository) {
+        this.books = books;
         this.cartService = cartService;
+        this.customerRepository = customerRepository;
     }
 
     /**
@@ -31,102 +38,108 @@ public class CartController {
      *              as an attribute to the model with the key "books".
      * @return The name of the view template to render.
      */
-    @GetMapping("/shop")
+    @GetMapping("/books")
     public String listBooks(Model model) {
-        model.addAttribute("books", bookRepository.findAll());
+        model.addAttribute("books", books.findAll());
         return "shop";
     }
 
     /**
      * Add a book to the cart.
      *
-     * @param bookId The ID of the book to add.
-     * @param customerId The ID of the customer.
+     * @param id The ID of the book to add.
+     * @param principal The logged-in customer.
      * @return New cart view.
      */
-    @PostMapping("/add/{bookId}")
-    public String addBookToCart(@PathVariable Long bookId, @RequestParam Long customerId) {
-        Cart cart = cartRepository.findByCustomerIdAndActiveTrue(customerId)
-                .orElseGet(() -> {
-                    Cart c = new Cart(new Customer()); // Fetch a customer properly in a real scenario
-                    cartRepository.save(c);
-                    return c;
-                });
+    @PostMapping("/cart/add/{id}")
+    public String add(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) return "redirect:/login";
 
-        cartService.addItem(cart, bookId, 1);
-        return "redirect:/cart/view?customerId=" + customerId;
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
+
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        cartService.addItem(cart.getId(), id, 1);
+        return "redirect:/shop";
     }
 
     /**
      * Remove a book from the cart.
      *
-     * @param bookId The ID of the book to remove.
-     * @param customerId The ID of the customer.
+     * @param id The ID of the book to remove.
+     * @param principal The logged-in customer.
      * @return New cart view.
      */
-    @PostMapping("/remove/{bookId}")
-    public String removeBookFromCart(@PathVariable Long bookId, @RequestParam Long customerId) {
-        Cart cart = cartRepository.findByCustomerIdAndActiveTrue(customerId)
-                .orElseThrow(() -> new IllegalStateException("Cart not found"));
+    @PostMapping("/cart/remove/{id}")
+    public String remove(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) return "redirect:/login";
 
-        cartService.removeItem(cart, bookId, 1);
-        return "redirect:/cart/view?customerId=" + customerId;
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
+
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        cartService.removeItem(cart.getId(), id, 1);
+        return "redirect:/cart";
     }
 
     /**
      * View cart.
      *
-     * @param customerId The ID of the customer.
+     * @param principal The logged-in customer.
      * @param model A container used to pass data to the view template.
      *              The list of books fetched from the repository is added
      *              as an attribute to the model with the key "cart".
      * @return The name of the view template to render.
      */
-    @GetMapping("/view")
-    public String viewCart(@RequestParam Long customerId, Model model) {
-        Cart cart = cartRepository.findByCustomerIdAndActiveTrue(customerId)
-                .orElseThrow(() -> new IllegalStateException("Cart not found"));
+    @GetMapping("/cart")
+    public String cart(@AuthenticationPrincipal CustomUserDetails principal, Model model) {
+        if (principal == null) return "redirect:/login";
 
-        model.addAttribute("items", cartService.detailed(cart));
-        model.addAttribute("total", cartService.total(cart));
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
+
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        Map<?, Integer> items = cartService.getDetailedCart(cart.getId());
+        BigDecimal total = cartService.calculateTotal(cart.getId());
+
+        model.addAttribute("items", items);
+        model.addAttribute("total", total);
         return "cart";
     }
 
     /**
      * Checkout cart, process payment, update stock.
      *
-     * @param customerId The ID of the customer.
+     * @param principal The logged-in customer.
      * @return New cart view with a paid flag set as confirmation of payment.
      */
-    @PostMapping("/checkout")
-    public String checkout(@RequestParam Long customerId) {
-        Cart cart = cartRepository.findByCustomerIdAndActiveTrue(customerId)
-                .orElseThrow(() -> new IllegalStateException("Cart not found"));
+    @PostMapping("/cart/checkout")
+    public String checkout(@AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) return "redirect:/login";
 
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
+
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
         cartService.checkout(cart.getId());
-        return "redirect:/cart/view?customerId=" + customerId + "&paid=true";
+        return "redirect:/shop?paid=true";
     }
-
-    // Clear cart
 
     /**
      * Clear the cart.
      *
-     * @param customerId The ID of the customer.
+     * @param principal The logged-in customer.
      * @return New cart view with the cart cleared.
      */
-    @PostMapping("/clear")
-    public String clearCart(@RequestParam Long customerId) {
-        Cart cart = cartRepository.findByCustomerIdAndActiveTrue(customerId)
-                .orElseThrow(() -> new IllegalStateException("Cart not found"));
+    @PostMapping("/cart/clear")
+    public String clear(@AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) return "redirect:/login";
 
-        cart.getItems().forEach(item -> {
-            item.setCart(null);
-        });
-        cart.getItems().clear();
-        cart.deactivate();
-        cartRepository.save(cart);
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
 
-        return "redirect:/cart/view?customerId=" + customerId;
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        cartService.clearCart(cart.getId());
+        return "redirect:/shop";
     }
 }

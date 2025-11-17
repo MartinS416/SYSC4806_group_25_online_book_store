@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.example.demo.controller.CustomerController.getCustomer;
+
 @Service
 public class CustomerService {
 
@@ -29,14 +31,7 @@ public class CustomerService {
     public Customer update(Long id, Customer updated) {
         Customer c = findById(id);
 
-        c.setUsername(updated.getUsername());
-        c.setPassword(updated.getPassword());
-        c.setEmail(updated.getEmail());
-        c.setFirstName(updated.getFirstName());
-        c.setLastName(updated.getLastName());
-        c.setPhone(updated.getPhone());
-
-        return customerRepository.save(c);
+        return getCustomer(updated, c, customerRepository);
     }
 
     public void delete(Long id) { customerRepository.deleteById(id); }

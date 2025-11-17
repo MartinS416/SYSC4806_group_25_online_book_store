@@ -1,197 +1,151 @@
 package com.example.demo.service;
 
-import com.example.demo.model.*;
-import com.example.demo.repository.BookRepository;
-import com.example.demo.repository.CartItemRepository;
+import com.example.demo.model.Cart;
+import com.example.demo.model.CartItem;
+import com.example.demo.model.Book;
+import com.example.demo.model.Order;
+import com.example.demo.model.OrderLine;
+import com.example.demo.model.Customer;
 import com.example.demo.repository.CartRepository;
+import com.example.demo.repository.CartItemRepository;
+import com.example.demo.repository.BookRepository;
+import com.example.demo.repository.OrderRepository;
+import com.example.demo.repository.OrderLineRepository;
+import com.example.demo.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for CartService (repository-backed).
+ */
+@ExtendWith(MockitoExtension.class)
 class CartServiceTest {
 
-    private CartService cartService;
-    private BookRepository bookRepository;
+    @Mock
     private CartRepository cartRepository;
-    private CartItemRepository cartItemRepository;
-    private OrderService orderService;
 
-    private Customer customer;
+    @Mock
+    private CartItemRepository cartItemRepository;
+
+    @Mock
+    private BookRepository bookRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderLineRepository orderLineRepository;
+
+    @Mock
+    private CustomerRepository customerRepository;
+
+    @InjectMocks
+    private CartService cartService;
+
     private Cart cart;
-    private Book book1, book2;
+    private Book book1;
+    private Book book2;
 
     @BeforeEach
     void setUp() {
-        bookRepository = mock(BookRepository.class);
-        cartRepository = mock(CartRepository.class);
-        cartItemRepository = mock(CartItemRepository.class);
-        orderService = mock(OrderService.class);
+        Customer customer = new Customer();
+        ReflectionTestUtils.setField(customer, "id", 42L);
 
-        cartService = new CartService(cartRepository, cartItemRepository, bookRepository, orderService);
-
-        customer = new Customer("user","pass","email","John","Doe","12345");
         cart = new Cart(customer);
-        ReflectionTestUtils.setField(cart, "id", 1L);
+        ReflectionTestUtils.setField(cart, "id", 10L);
 
-        book1 = new Book("Book A","Author A",10.0,"Fiction",5);
-        book2 = new Book("Book B","Author B",15.0,"Non-Fiction",2);
+        book1 = new Book();
         book1.setId(1L);
+        book1.setPrice(BigDecimal.valueOf(10.0));
+
+        book2 = new Book();
         book2.setId(2L);
+        book2.setPrice(BigDecimal.valueOf(15.0));
+    }
 
-        CartItem item1 = new CartItem(cart, book1, 2);
-        CartItem item2 = new CartItem(cart, book2, 1);
-        cart.addItem(item1);
-        cart.addItem(item2);
-
+    @Test
+    void addItem_persistsNewCartItem() {
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
-        when(bookRepository.findById(2L)).thenReturn(Optional.of(book2));
-        when(cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
-    }
+        when(cartItemRepository.save(any(CartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    /**
-     * Add Item to Cart.
-     */
-    @Test
-    void testAddItem() {
-        cartService.addItem(cart, book1.getId(), 1);
-        assertEquals(3, cart.getItems().stream().filter(i -> i.getBook().equals(book1)).findFirst().get().getQuantity());
-        verify(cartItemRepository, atLeastOnce()).save(any(CartItem.class));
-    }
+        CartItem saved = cartService.addItem(10L, 1L, 1);
 
-    /**
-     * Remove Item from Cart.
-     */
-    @Test
-    void testRemoveItem() {
-        cartService.removeItem(cart, book1.getId(), 1);
-        assertEquals(1, cart.getItems().stream().filter(i -> i.getBook().equals(book1)).findFirst().get().getQuantity());
-
-        cartService.removeItem(cart, book1.getId(), 1);
-        assertTrue(cart.getItems().stream().noneMatch(i -> i.getBook().equals(book1)));
-
-        verify(cartItemRepository, atLeastOnce()).delete(any(CartItem.class));
-    }
-
-    /**
-     * Total cost of the cart.
-     */
-    @Test
-    void testTotal() {
-        double total = cartService.total(cart);
-        assertEquals(35.0, total);
-    }
-
-    /**
-     * Checkout creates order lines, reduces stock, and clears cart.
-     */
-    @Test
-    void testCheckout() {
-        Order savedOrder = new Order();
-        savedOrder.setId(1L);
-
-        when(orderService.create(any(Order.class))).thenReturn(savedOrder);
-        when(bookRepository.save(any(Book.class))).thenAnswer(i -> i.getArgument(0));
-
-        Order order = cartService.checkout(cart.getId());
-
-        assertEquals(3, book1.getStock());
-        assertEquals(1, book2.getStock());
-        assertEquals(2, order.getOrderLines().size());
-        assertTrue(order.getOrderLines().stream().anyMatch(ol -> ol.getBook().equals(book1) && ol.getQuantity() == 2));
-        assertTrue(order.getOrderLines().stream().anyMatch(ol -> ol.getBook().equals(book2) && ol.getQuantity() == 1));
-
-        assertTrue(cart.getItems().isEmpty());
-        assertFalse(cart.isActive());
-
-        verify(bookRepository, atLeastOnce()).save(book1);
-        verify(bookRepository, atLeastOnce()).save(book2);
+        assertNotNull(saved);
+        assertEquals(1, saved.getQuantity());
+        assertEquals(book1, saved.getBook());
+        verify(cartItemRepository, times(1)).save(any(CartItem.class));
         verify(cartRepository, atLeastOnce()).save(cart);
-        verify(orderService, atLeastOnce()).create(any(Order.class));
-    }
-
-    /**
-     * Add a new book to the cart.
-     */
-    @Test
-    void testAddNewCartItem() {
-        Book book3 = new Book("Book C","Author C",20.0,"Sci-Fi",10);
-        book3.setId(3L);
-        when(bookRepository.findById(3L)).thenReturn(Optional.of(book3));
-
-        cartService.addItem(cart, book3.getId(), 1);
-        assertEquals(3, cart.getItems().size());
-        assertTrue(cart.getItems().stream().anyMatch(i -> i.getBook().equals(book3)));
-        verify(cartItemRepository, atLeastOnce()).save(any(CartItem.class));
-    }
-
-    /**
-     * Remove item completely if quantity exceeds.
-     */
-    @Test
-    void testRemoveItemCompletely() {
-        cartService.removeItem(cart, book2.getId(), 5);
-        assertFalse(cart.getItems().stream().anyMatch(i -> i.getBook().equals(book2)));
-        verify(cartItemRepository, atLeastOnce()).delete(any(CartItem.class));
-    }
-
-    /**
-     * Detailed mapping: Book -> CartItem.
-     */
-    @Test
-    void testDetailedMapping() {
-        var detailed = cartService.detailed(cart);
-        assertEquals(2, detailed.size());
-        assertTrue(detailed.containsKey(book1));
-        assertTrue(detailed.containsKey(book2));
-    }
-
-    // EDGE CASES
-
-    @Test
-    void testAddNegativeQuantity() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> cartService.addItem(cart, book1.getId(), -2));
-        assertEquals("Quantity must be positive", ex.getMessage());
     }
 
     @Test
-    void testRemoveNegativeQuantity() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> cartService.removeItem(cart, book1.getId(), -1));
-        assertEquals("Quantity must be positive", ex.getMessage());
+    void addItem_negativeQuantity_throws() {
+        assertThrows(IllegalArgumentException.class, () -> cartService.addItem(10L, 1L, -1));
+        verifyNoInteractions(cartRepository, bookRepository, cartItemRepository);
     }
 
     @Test
-    void testRemoveNonExistingBook() {
-        Book book3 = new Book("Book C","Author C",20.0,"Sci-Fi",10);
-        book3.setId(3L);
-        assertDoesNotThrow(() -> cartService.removeItem(cart, book3.getId(), 1));
+    void removeItem_negativeQuantity_throws() {
+        assertThrows(IllegalArgumentException.class, () -> cartService.removeItem(10L, 1L, -5));
+        verifyNoInteractions(cartRepository, cartItemRepository);
     }
 
     @Test
-    void testCheckoutEmptyCart() {
-        Cart emptyCart = new Cart(customer);
-        ReflectionTestUtils.setField(emptyCart, "id", 2L);
-        when(cartRepository.findById(emptyCart.getId())).thenReturn(Optional.of(emptyCart));
+    void checkout_emptyCart_throwsExactMessage() {
+        cart.setItems(new ArrayList<>()); // empty
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> cartService.checkout(emptyCart.getId()));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> cartService.checkout(10L));
         assertEquals("Cannot checkout an empty cart", ex.getMessage());
+
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderLineRepository, never()).save(any(OrderLine.class));
     }
 
     @Test
-    void testTotalEmptyCart() {
-        Cart emptyCart = new Cart(customer);
-        double total = cartService.total(emptyCart);
-        assertEquals(0.0, total);
-    }
+    void checkout_createsOrderLines_and_clearsCart() {
+        // prepare cart items
+        CartItem ci1 = new CartItem();
+        ci1.setBook(book1);
+        ci1.setQuantity(1);
 
-    @Test
-    void testDetailedMappingEmptyCart() {
-        Cart emptyCart = new Cart(customer);
-        var detailed = cartService.detailed(emptyCart);
-        assertTrue(detailed.isEmpty());
+        CartItem ci2 = new CartItem();
+        ci2.setBook(book2);
+        ci2.setQuantity(1);
+
+        cart.addItem(ci1);
+        cart.addItem(ci2);
+
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            ReflectionTestUtils.setField(o, "id", 100L);
+            return o;
+        });
+
+        when(orderLineRepository.save(any(OrderLine.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // run the method under test
+        int created = cartService.checkout(10L);
+
+        assertEquals(2, created);
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderLineRepository, times(2)).save(any(OrderLine.class));
+        // verify cart items removed via repository are deleted, and the cart is saved
+        verify(cartItemRepository, times(2)).delete(any(CartItem.class));
+        verify(cartRepository, times(1)).save(cart);
+        assertTrue(cart.getItems().isEmpty());
     }
 }

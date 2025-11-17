@@ -1,16 +1,20 @@
 package com.example.demo.service;
 
 import com.example.demo.model.*;
-import com.example.demo.repository.BookRepository;
-import com.example.demo.repository.CartItemRepository;
-import com.example.demo.repository.CartRepository;
+import com.example.demo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 
+/**
+ * Repository-backed cart service.
+ * - addItem/removeItem validate negative quantities and persist via repositories
+ * - checkout returns the number of created order lines and throws an error
+ *   message when the cart is empty
+ */
 @Service
 @Transactional
 public class CartService {
@@ -18,7 +22,9 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final BookRepository bookRepository;
-    private final OrderService orderService;
+    private final OrderRepository orderRepository;
+    private final OrderLineRepository orderLineRepository;
+    private final CustomerRepository customerRepository;
 
     /**
      * Constructor.
@@ -26,131 +32,201 @@ public class CartService {
      * @param cartRepository Live Repo of Carts.
      * @param cartItemRepository Live Repo of CartItems.
      * @param bookRepository Live Repo of Books.
-     * @param orderService Service for creating Orders.
+     * @param orderLineRepository Live Repo of OrderLines to be attached to Orders.
      */
     public CartService(CartRepository cartRepository,
                        CartItemRepository cartItemRepository,
                        BookRepository bookRepository,
-                       OrderService orderService) {
+                       OrderRepository orderRepository,
+                       OrderLineRepository orderLineRepository,
+                       CustomerRepository customerRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.bookRepository = bookRepository;
-        this.orderService = orderService;
+        this.orderRepository = orderRepository;
+        this.orderLineRepository = orderLineRepository;
+        this.customerRepository = customerRepository;
     }
 
     /**
-     * Add item to the cart.
-     * @param cart The cart to add item to.
-     * @param bookId The ID of the book to add.
-     * @param quantity The quantity of the book to add.
+     * Find an active cart for the customer or create a new one.
+     * Requires CartRepository to expose:
+     *      Optional<Cart> findByCustomerIdAndActiveTrue(Long customerId)
+     *
+     * @param customerId The ID of the customer.
+     * @return The cart for the customer.
      */
-    public void addItem(Cart cart, Long bookId, int quantity) {
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        CartItem existingItem = cart.getItems().stream()
-                .filter(i -> i.getBook().getId().equals(bookId))
-                .findFirst()
-                .orElse(null);
+    @Transactional(readOnly = true)
+    public Cart findOrCreateCartForCustomer(Long customerId) {
+        return cartRepository.findByCustomerIdAndActiveTrue(customerId)
+                .orElseGet(() -> {
+                    Customer c = customerRepository.findById(customerId)
+                            .orElseThrow(() -> new NoSuchElementException("Customer not found: " + customerId));
+                    Cart cart = new Cart(c);
+                    cart.activate();
+                    return cartRepository.save(cart);
+                });
+    }
 
-        if (existingItem != null) {
-            existingItem.setQuantity(existingItem.getQuantity() + quantity);
+    /**
+     * Add the quantity of the given book to the cart (create or increment CartItem).
+     *
+     * @param cartId   The ID associated with the cart to add item to.
+     * @param bookId   The ID of the book to add.
+     * @param quantity The quantity of the book to add.
+     * @return The CartItem created or updated.
+     * @throws IllegalArgumentException for negative quantities.
+     */
+    @Transactional
+    public CartItem addItem(Long cartId, Long bookId, int quantity) {
+        if (quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new NoSuchElementException("Book not found: " + bookId));
+
+        Optional<CartItem> existingOpt = cart.getItems().stream()
+                .filter(ci -> ci.getBook() != null && bookId.equals(ci.getBook().getId()))
+                .findFirst();
+
+        CartItem toSave;
+        if (existingOpt.isPresent()) {
+            CartItem existing = existingOpt.get();
+            existing.setQuantity(existing.getQuantity() + quantity);
+            toSave = existing;
         } else {
-            CartItem item = new CartItem(cart, book, quantity);
-            cart.addItem(item);
-            cartItemRepository.save(item);
+            CartItem ci = new CartItem();
+            ci.setBook(book);
+            ci.setCart(cart);
+            ci.setQuantity(quantity);
+            cart.addItem(ci);
+            toSave = ci;
+        }
+
+        CartItem saved = cartItemRepository.save(toSave);
+        cartRepository.save(cart); // persist relationship changes
+        return saved;
+    }
+
+    /**
+     * Remove item from the cart. If quantity removes all units, the CartItem is deleted.
+     *
+     * @param cartId The ID associated with the cart to remove item from.
+     * @param bookId The ID of the book to remove.
+     * @param quantity The quantity of the book to remove.
+     * @throws IllegalArgumentException for negative quantities.
+     */
+    @Transactional
+    public void removeItem(Long cartId, Long bookId, int quantity) {
+        if (quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+
+        CartItem existing = cart.getItems().stream()
+                .filter(ci -> ci.getBook() != null && bookId.equals(ci.getBook().getId()))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Cart item not found for book: " + bookId));
+
+        if (quantity >= existing.getQuantity()) {
+            cart.removeItem(existing);
+            cartItemRepository.delete(existing);
+        } else {
+            existing.setQuantity(existing.getQuantity() - quantity);
+            cartItemRepository.save(existing);
         }
 
         cartRepository.save(cart);
     }
 
     /**
-     * Remove item from the cart.
+     * Keep template ordering stable (like previous detailed method).
      *
-     * @param cart The cart to remove item from.
-     * @param bookId The ID of the book to remove.
-     * @param quantity The quantity of the book to remove.
+     * @param cartId The ID associated with the cart to calculate the total price of.
+     * @return LinkedHashMap<Book, Integer> of books and quantities in cart.
      */
-    public void removeItem(Cart cart, Long bookId, int quantity) {
-        cart.getItems().stream()
-                .filter(i -> i.getBook().getId().equals(bookId))
-                .findFirst()
-                .ifPresent(item -> {
-                    int remaining = item.getQuantity() - quantity;
-                    if (remaining > 0) {
-                        item.setQuantity(remaining);
-                    } else {
-                        cart.removeItem(item);
-                        cartItemRepository.delete(item);
-                    }
-                });
-
-        cartRepository.save(cart);
-    }
-
-    /**
-     * Calculate the total price of cart items.
-     *
-     * @param cart The cart to calculate the total price of.
-     * @return The total price of the cart items.
-     */
-    public double total(Cart cart) {
-        return cart.getItems().stream()
-                .mapToDouble(i -> i.getBook().getPrice() * i.getQuantity())
-                .sum();
-    }
-
-    /**
-     * Detailed mapping: Book -> quantity
-     *
-     * @param cart The cart to map.
-     * @return Hashmap of Books and associated quantities.
-     */
-    public Map<Book, Integer> detailed(Cart cart) {
-        Map<Book, Integer> result = new LinkedHashMap<>();
-        cart.getItems().forEach(i -> result.put(i.getBook(), i.getQuantity()));
+    @Transactional(readOnly = true)
+    public Map<Book, Integer> getDetailedCart(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+        LinkedHashMap<Book, Integer> result = new LinkedHashMap<>();
+        cart.getItems().forEach(ci -> result.put(ci.getBook(), ci.getQuantity()));
         return result;
     }
 
     /**
-     * Checkout: create Order with OrderLines, update stock, clear cart
+     * Calculate the total price of the cart.
      *
-     * @param cartId Cart ID to attach the order line to.
-     * @return The newly created Order.
+     * @param cartId The ID associated with the cart to calculate the total price of.
+     * @return The total price of the cart.
      */
-    public Order checkout(Long cartId) {
-        Cart cart = cartRepository.findById(cartId).orElseThrow();
-        if (cart.getItems().isEmpty()) throw new IllegalStateException("Cart is empty");
+    @Transactional(readOnly = true)
+    public BigDecimal calculateTotal(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+        return BigDecimal.valueOf(cart.getItems().stream()
+                .mapToDouble(ci -> ci.getBook().getPrice().doubleValue() * ci.getQuantity())
+                .sum());
+    }
 
-        // Create Order
+    /**
+     * Clears the cart (removes persisted CartItems).
+     *
+     * @param cartId The ID associated with the cart to clear.
+     */
+    @Transactional
+    public void clearCart(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+        List<CartItem> copy = new ArrayList<>(cart.getItems());
+        for (CartItem ci : copy) {
+            cart.removeItem(ci);
+            cartItemRepository.delete(ci);
+        }
+        cartRepository.save(cart);
+    }
+
+    /**
+     * Check out the cart: create an Order and OrderLines from CartItems, clear the cart.
+     *
+     * @param cartId The ID associated with the cart to calculate the total price of.
+     * @return The number of order lines created.
+     * @throws IllegalStateException if the cart is empty.
+     */
+    @Transactional
+    public int checkout(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
+
+        List<CartItem> items = cart.getItems();
+        if (items == null || items.isEmpty()) {
+            throw new IllegalStateException("Cannot checkout an empty cart");
+        }
+
         Order order = new Order();
         order.setCustomer(cart.getCustomer());
+        order.setCreatedAt(Instant.now());
+        Order savedOrder = orderRepository.save(order);
 
-        Order finalOrder = order;
-        cart.getItems().forEach(item -> {
-            // Update stock
-            Book book = item.getBook();
-            book.setStock(Math.max(0, book.getStock() - item.getQuantity()));
-            bookRepository.save(book);
+        int count = 0;
+        for (CartItem ci : new ArrayList<>(items)) {
+            OrderLine line = new OrderLine();
+            line.setBook(ci.getBook());
+            line.setQuantity(ci.getQuantity());
+            line.setSubtotal(ci.getBook().getPrice());
+            line.setOrder(savedOrder);
+            orderLineRepository.save(line);
+            count++;
+        }
 
-            // Create OrderLine
-            OrderLine orderLine = new OrderLine();
-            orderLine.setBook(book);
-            orderLine.setQuantity(item.getQuantity());
-            orderLine.setPrice(BigDecimal.valueOf(book.getPrice()));
-            orderLine.setOrder(finalOrder);
-            finalOrder.addOrderLine(orderLine);
-        });
-
-        order = orderService.create(order); // persist Order
-
-        // Clear cart
-        cart.getItems().forEach(item -> {
-            cartItemRepository.delete(item);
-            item.setCart(null);
-        });
-        cart.getItems().clear();
-        cart.deactivate();
+        // clear cart
+        for (CartItem ci : new ArrayList<>(items)) {
+            cart.removeItem(ci);
+            cartItemRepository.delete(ci);
+        }
         cartRepository.save(cart);
 
-        return order;
+        return count;
     }
 }

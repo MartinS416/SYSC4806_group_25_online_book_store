@@ -17,7 +17,6 @@ public class ShopController {
         this.br = br;
     }
 
-
     @GetMapping("/shop")
     public String showShopPage(Model model) {
         List<Book> books = br.findAll();

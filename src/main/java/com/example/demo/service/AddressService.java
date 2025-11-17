@@ -1,10 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Address;
+import com.example.demo.model.Customer;
 import com.example.demo.repository.AddressRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class AddressService {
@@ -25,18 +27,28 @@ public class AddressService {
     public List<Address> findAll() { return addressRepository.findAll(); }
 
     public Address update(Long id, Address updated) {
-        Address a = findById(id);
+        Address existing = addressRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Address not found: " + id));
 
-        a.setFirstName(updated.getFirstName());
-        a.setLastName(updated.getLastName());
-        a.setStreet(updated.getStreet());
-        a.setUnit(updated.getUnit());
-        a.setCity(updated.getCity());
-        a.setRegion(updated.getRegion());
-        a.setPostcode(updated.getPostcode());
-        a.setCountry(updated.getCountry());
+        existing.setFirstName(updated.getFirstName());
+        existing.setLastName(updated.getLastName());
+        existing.setStreet(updated.getStreet());
+        existing.setUnit(updated.getUnit());
+        existing.setCity(updated.getCity());
+        existing.setRegion(updated.getRegion());
+        existing.setPostcode(updated.getPostcode());
+        existing.setCountry(updated.getCountry());
 
-        return addressRepository.save(a);
+        // Ensure the customer is not null
+        if (updated.getCustomer() != null) {
+            existing.setCustomer(updated.getCustomer());
+        } else if (existing.getCustomer() == null) {
+            // default empty Customer instead of null
+            // todo --> review for fix/ improvement?
+            existing.setCustomer(new Customer());
+        }
+
+        return addressRepository.save(existing);
     }
 
     public void delete(Long id) {

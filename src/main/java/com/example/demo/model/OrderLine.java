@@ -41,5 +41,5 @@ public class OrderLine {
     public void setOrder(Order order) { this.order = order; }
     public void setBook(Book book) { this.book = book; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
-    public void setPrice(BigDecimal price) { this.price = price; }
+    public void setSubtotal(BigDecimal price) { this.price = price; }
 }
