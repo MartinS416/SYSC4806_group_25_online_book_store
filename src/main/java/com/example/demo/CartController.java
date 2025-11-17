@@ -73,7 +73,7 @@ public class CartController {
             status.setComplete();
             return "redirect:/shop?paid=true";
         } else {
-            return "redirect:/cart";
+            return "redirect:/cart?paid=false";
         }
     }
 }

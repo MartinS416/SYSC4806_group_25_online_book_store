@@ -68,7 +68,6 @@ public class CartService {
 
     public boolean checkCard(String cardNumber, String expiry, String cvv){
         //currently just checks if the card is expired. other checks could be added later.
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
         String currentDate = LocalDate.now().format(formatter);
         return Integer.parseInt(currentDate.split("/")[1]) <= Integer.parseInt(expiry.split("/")[1]) &&
