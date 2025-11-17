@@ -23,13 +23,15 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderInfos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer",  cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Cart> carts = new ArrayList<>();
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
 
-    public Customer() {}
+    // CONSTRUCTORS //
+    public Customer() {
+    }
 
     public Customer(String username, String password, String email, String firstName, String lastName, String phone) {
         this.username = username;
@@ -54,10 +56,9 @@ public class Customer {
     public String getFirstName() {  return firstName; }
     public String getLastName() {  return lastName; }
     public String getPhone() { return phone; }
-    public List<Order> getOrderInfos() { return orderInfos; }
-    public List<Cart> getCarts() { return carts; }
-    public List<Address> getAddresses() { return addresses; }
-
+    public List<Order> getOrderInfos() {  return orderInfos; }
+    public List<Cart> getCarts() {  return carts; }
+    public List<Address> getAddresses() {  return addresses; }
 
     // SETTERS //
     public void setId(Long id) { this.id = id; }

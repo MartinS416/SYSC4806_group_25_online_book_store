@@ -1,42 +1,45 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
-public class CartItem {
+public class OrderLine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", nullable = false)
-    private Cart cart;
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    private int quantity = 1;
+    private int quantity;
+    private BigDecimal price;
 
-    public CartItem() {}
+    public OrderLine() {}
 
-    public CartItem(Cart cart, Book book, int quantity) {
-        this.cart = cart;
+    public OrderLine(Order order, Book book, int quantity, BigDecimal price) {
+        this.order = order;
         this.book = book;
         this.quantity = quantity;
+        this.price = price;
     }
 
     // GETTERS //
     public Long getId() { return id; }
-    public Cart getCart() { return cart; }
+    public Order getOrder() { return order; }
     public Book getBook() { return book; }
     public int getQuantity() { return quantity; }
+    public BigDecimal getPrice() { return price; }
 
     // SETTERS //
-    public void setCart(Cart cart) { this.cart = cart; }
+    public void setOrder(Order order) { this.order = order; }
     public void setBook(Book book) { this.book = book; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
-
-    public void increment(int delta) { this.quantity = Math.max(0, this.quantity + delta); }
+    public void setSubtotal(BigDecimal price) { this.price = price; }
 }
