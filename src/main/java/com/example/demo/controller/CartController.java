@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -123,6 +124,18 @@ public class CartController {
         Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
         cartService.checkout(cart.getId());
         return "redirect:/shop?paid=true";
+    }
+
+    @PostMapping("/cart/pay")
+    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status,
+                      @RequestParam("cardNumber") String cardNumber, @RequestParam("expiry") String expiry,
+                      @RequestParam("cvv") String cvv) {
+        if (cartService.processPayment(cart, cardNumber, expiry, cvv)) {
+            status.setComplete();
+            return "redirect:/shop?paid=true";
+        } else {
+            return "redirect:/cart?paid=false";
+        }
     }
 
     /**
