@@ -27,12 +27,13 @@ public class CartItem {
         this.quantity = quantity;
     }
 
+    // GETTERS //
     public Long getId() { return id; }
     public Cart getCart() { return cart; }
     public Book getBook() { return book; }
     public int getQuantity() { return quantity; }
 
-    public void setId(Long id) { this.id = id; }
+    // SETTERS //
     public void setCart(Cart cart) { this.cart = cart; }
     public void setBook(Book book) { this.book = book; }
     public void setQuantity(int quantity) { this.quantity = quantity; }

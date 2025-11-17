@@ -42,6 +42,12 @@ public class Customer {
         this.phone = phone;
     }
 
+    public Customer(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
     // GETTERS //
     public Long getId() { return id; }
     public String getUsername() {  return username; }
