@@ -2,10 +2,13 @@ package com.example.demo;
 
 import com.example.demo.Book;
 import com.example.demo.BookRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.time.LocalDate;
 
 @Service
 public class CartService {
@@ -46,13 +49,29 @@ public class CartService {
     }
 
     //Simple process payment method, to be changed later, just updates the stock of the book and clears the session to empty the cart.
-    public void processPayment(Map<Long, Integer> cart) {
-        cart.forEach((bookId,qty)->{
-            books.findById(bookId).ifPresent(book-> {
-                int stock = Math.max(0, book.getStock() -qty);
-                book.setStock(stock);
-                books.save(book);
+    public boolean processPayment(Map<Long, Integer> cart, String cardNumber, String expiry, String cvv) {
+        if(checkCard(cardNumber,expiry,cvv)) {
+            System.out.println("not expired");
+            cart.forEach((bookId, qty) -> {
+                books.findById(bookId).ifPresent(book -> {
+                    int stock = Math.max(0, book.getStock() - qty);
+                    book.setStock(stock);
+                    books.save(book);
+                });
             });
-        });
+            return true;
+        } else {
+            System.out.println("card expired");
+            return false;
+        }
+    }
+
+    public boolean checkCard(String cardNumber, String expiry, String cvv){
+        //currently just checks if the card is expired. other checks could be added later.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        String currentDate = LocalDate.now().format(formatter);
+        return Integer.parseInt(currentDate.split("/")[1]) <= Integer.parseInt(expiry.split("/")[1]) &&
+                (Integer.parseInt(currentDate.split("/")[1]) != Integer.parseInt(expiry.split("/")[1]) ||
+                        Integer.parseInt(currentDate.split("/")[0]) <= Integer.parseInt(expiry.split("/")[0]));
     }
 }
