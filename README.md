@@ -7,6 +7,8 @@ A simple online store that allows individuals to purchase books from a bookstore
 ![Java](https://img.shields.io/badge/java-21-orange)  
 ![Spring Boot](https://img.shields.io/badge/spring--boot-3.3-green)
 
+**Author[s]**: [@fareenlavji](https://github.com/fareenlavji), [@user2](https://github.com/user2), etc.
+
 ---
 
 ## ✅ Table of Contents
@@ -286,15 +288,19 @@ src/test/java/com/bookstore/
 
 ---
 
-## 📌 Contributions by Milestone
+## 📌 Contribution Summary by Milestone
 
-| Milestone      | Users        | Contributions |
-|---------------|-------------|--------------------------------------------------------------------------|
-| **Milestone 1** | @fareenlavji<br>@dev2<br>@dev3<br>@dev4<br>@dev5 | - <br>- <br>- <br>- <br>- |
-| **Milestone 2** | @fareenlavji<br>@dev2<br>@dev3<br>@dev4<br>@dev5 | - <br>- <br>- <br>- <br>- |
-| **Milestone 3** | @fareenlavji<br>@dev2<br>@dev3<br>@dev4<br>@dev5 | - <br>- <br>- <br>- <br>- |
+| User      | Milestone 01                | Milestone 02                | Milestone 03                |
+|-----------|-----------------------------|-----------------------------|-----------------------------|
+| [@fareenlavji](https://github.com/fareenlavji) | Programmed entities (models), and repositories.| 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Item 2<br>3. Item 3 | 
+| [@user2](https://github.com/user2) | 1. Item 1<br>2. Item 2.<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| [@user3](https://github.com/user3) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| [@user4](https://github.com/user4) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| [@user5](https://github.com/user5) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
 
+<!--
 ---
 
 ## 📜 License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+-->
