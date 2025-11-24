@@ -45,17 +45,16 @@ public class LoginController {
      */
     @PostMapping("/register")
     public String register(@ModelAttribute Customer customer, RedirectAttributes redirectAttributes) {
-        System.out.println("REGISTER HIT: " + customer);
 
         try {
             loginService.registerUser(customer);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/login#register";
+            return "redirect:/login?registerError";
         }
 
         redirectAttributes.addFlashAttribute("success", "Registration successful! Please login.");
-        return "redirect:/login#login";
+        return "redirect:/login#pills-login";
     }
 
 }
