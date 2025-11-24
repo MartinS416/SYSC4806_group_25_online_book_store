@@ -6,7 +6,7 @@ name: Build and deploy JAR app to Azure Web App - OnlineBookStoreLinux
 on:
   push:
     branches:
-      - azure-db-config
+      - main
   workflow_dispatch:
 
 jobs:
@@ -60,4 +60,5 @@ jobs:
           app-name: 'OnlineBookStoreLinux'
           slot-name: 'Production'
           package: '*.jar'
+
           
