@@ -20,6 +20,10 @@ public class BookService {
                 .orElseThrow(() -> new IllegalArgumentException("Book not found: " + id));
     }
 
+    public Book save(Book book) {
+        return bookRepository.save(book);
+    }
+
     public List<Book> findAll() { return bookRepository.findAll(); }
 
     public Book update(Long id, Book updated) {
