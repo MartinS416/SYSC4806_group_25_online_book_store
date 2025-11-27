@@ -58,7 +58,7 @@ public class CartService {
      * @param customerId The ID of the customer.
      * @return The cart for the customer.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Cart findOrCreateCartForCustomer(Long customerId) {
         return cartRepository.findByCustomerIdAndActiveTrue(customerId)
                 .orElseGet(() -> {
@@ -148,7 +148,7 @@ public class CartService {
      * @param cartId The ID associated with the cart to calculate the total price of.
      * @return LinkedHashMap<Book, Integer> of books and quantities in cart.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<Book, Integer> getDetailedCart(Long cartId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
@@ -163,7 +163,7 @@ public class CartService {
      * @param cartId The ID associated with the cart to calculate the total price of.
      * @return The total price of the cart.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public BigDecimal calculateTotal(Long cartId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
