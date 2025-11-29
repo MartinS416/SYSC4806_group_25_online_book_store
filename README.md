@@ -293,7 +293,7 @@ src/test/java/com/bookstore/
 | User      | Milestone 01                | Milestone 02                | Milestone 03                |
 |-----------|-----------------------------|-----------------------------|-----------------------------|
 | [@fareenlavji](https://github.com/fareenlavji) | Programmed entities (models), and repositories.| 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Item 2<br>3. Item 3 | 
-| [@user2](https://github.com/user2) | 1. Item 1<br>2. Item 2.<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| [@martins416](https://github.com/martins416) | 1. Implemented basic payment processing.<br>2. Implemented website styling and layout.<br>3. Set up Azure hosting and CI/CD pipeline. | 1. Implemented login authentication system.<br>2. Created and configured the database schema.<br>3. Additional backend setup tasks. | 1. Implemented full admin pages and management tools.<br>2. Fixed UI-related bugs across the site.<br>3. Improved overall interface stability. |
 | [@user3](https://github.com/user3) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
 | [@user4](https://github.com/user4) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
 | [@user5](https://github.com/user5) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
