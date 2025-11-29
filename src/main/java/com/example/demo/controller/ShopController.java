@@ -30,6 +30,7 @@ public class ShopController {
                           CustomerRepository customerRepository,
                           OrderRepository orderRepository,
                           OrderLineRepository orderLineRepository) {
+
         this.br = br;
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
@@ -45,7 +46,14 @@ public class ShopController {
                                Model model,
                                Principal principal) {
 
-        // Base list: keyword search or all books
+        // --- Fix for reversed price range (min > max) ---
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            BigDecimal temp = minPrice;
+            minPrice = maxPrice;
+            maxPrice = temp;
+        }
+
+        // --- Base book list: keyword search or all books ---
         List<Book> books;
         if (keyword != null && !keyword.trim().isEmpty()) {
             books = br.searchBooks(keyword.trim());
@@ -53,55 +61,58 @@ public class ShopController {
             books = br.findAll();
         }
 
-        // Category filter
+        // --- Category filter ---
         if (category != null && !category.isBlank()) {
-            String selectedCategory = category.trim();
+            String selected = category.trim();
             books = books.stream()
-                    .filter(b -> b.getCategory() != null
-                            && b.getCategory().equalsIgnoreCase(selectedCategory))
+                    .filter(b -> b.getCategory() != null &&
+                            b.getCategory().equalsIgnoreCase(selected))
                     .collect(Collectors.toList());
         }
 
-        // Min price filter
+        // --- Min price filter ---
         if (minPrice != null) {
+            BigDecimal min = minPrice;
             books = books.stream()
-                    .filter(b -> b.getPrice() != null
-                            && b.getPrice().compareTo(minPrice) >= 0)
+                    .filter(b -> b.getPrice() != null &&
+                            b.getPrice().compareTo(min) >= 0)
                     .collect(Collectors.toList());
         }
 
-        // Max price filter
+        // --- Max price filter ---
         if (maxPrice != null) {
+            BigDecimal max = maxPrice;
             books = books.stream()
-                    .filter(b -> b.getPrice() != null
-                            && b.getPrice().compareTo(maxPrice) <= 0)
+                    .filter(b -> b.getPrice() != null &&
+                            b.getPrice().compareTo(max) <= 0)
                     .collect(Collectors.toList());
         }
 
-        // In-stock filter
+        // --- In-stock filter ---
         if (Boolean.TRUE.equals(inStock)) {
             books = books.stream()
                     .filter(b -> b.getStock() > 0)
                     .collect(Collectors.toList());
         }
 
-        // Categories for dropdown
-        List<String> categories = br.findDistinctCategories();
-
+        // --- Add filtered results + sticky values ---
         model.addAttribute("books", books);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("categories", categories);
+        model.addAttribute("categories", br.findDistinctCategories());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("inStock", inStock);
 
-        // Recommendations
-        List<Book> recommendedBooks = getRecommendationsForCurrentUser(principal);
-        model.addAttribute("recommendedBooks", recommendedBooks);
+        // --- Recommendations for logged-in user ---
+        model.addAttribute("recommendedBooks", getRecommendationsForCurrentUser(principal));
 
         return "shop";
     }
+
+    // ------------------------------------------------------
+    //                RECOMMENDATION SYSTEM
+    // ------------------------------------------------------
 
     private List<Book> getRecommendationsForCurrentUser(Principal principal) {
         if (principal == null) {
@@ -113,119 +124,98 @@ public class ShopController {
                 .orElse(Collections.emptyList());
     }
 
-    /**
-     * Recommend books using Jaccard similarity between current customer and others.
-     */
     private List<Book> calculateRecommendationsForCustomer(Customer customer) {
-        Long currentCustomerId = customer.getId();
+        Long customerId = customer.getId();
+        if (customerId == null) return Collections.emptyList();
 
-        // customerId -> set of purchased bookIds
+        // Map customerId -> set of purchased book IDs
         Map<Long, Set<Long>> customerToBooks = new HashMap<>();
 
-        List<Order> allOrders = orderRepository.findAll();
-        for (Order order : allOrders) {
-            if (order.getCustomer() == null) {
-                continue;
-            }
+        for (Order order : orderRepository.findAll()) {
+            if (order.getCustomer() == null || order.getCustomer().getId() == null) continue;
 
-            Long custId = order.getCustomer().getId();
+            Long cid = order.getCustomer().getId();
+            Set<Long> purchasedBooks = customerToBooks.computeIfAbsent(cid, id -> new HashSet<>());
+
             List<OrderLine> lines = orderLineRepository.findByOrder(order);
-            if (lines == null || lines.isEmpty()) {
-                continue;
-            }
-
-            Set<Long> bookIds = customerToBooks.computeIfAbsent(custId, id -> new HashSet<>());
+            if (lines == null) continue;
 
             for (OrderLine line : lines) {
                 if (line.getBook() != null && line.getBook().getId() != null) {
-                    bookIds.add(line.getBook().getId());
+                    purchasedBooks.add(line.getBook().getId());
                 }
             }
         }
 
-        Set<Long> myBooks = customerToBooks.getOrDefault(currentCustomerId, Collections.emptySet());
-
-        // No history → popular books fallback
+        Set<Long> myBooks = customerToBooks.getOrDefault(customerId, Set.of());
         if (myBooks.isEmpty()) {
             return getMostPopularBooks(customerToBooks, 5);
         }
 
-        // Jaccard similarity with other customers
+        // Jaccard similarity computation
         Map<Long, Double> similarity = new HashMap<>();
 
-        for (Map.Entry<Long, Set<Long>> entry : customerToBooks.entrySet()) {
+        for (var entry : customerToBooks.entrySet()) {
             Long otherId = entry.getKey();
-            if (otherId.equals(currentCustomerId)) {
-                continue;
-            }
+            if (otherId.equals(customerId)) continue;
 
             Set<Long> otherBooks = entry.getValue();
-            if (otherBooks.isEmpty()) {
-                continue;
-            }
-
             long intersection = myBooks.stream().filter(otherBooks::contains).count();
-            if (intersection == 0) {
-                continue;
-            }
+            if (intersection == 0) continue;
 
             long union = myBooks.size() + otherBooks.size() - intersection;
-            double jaccard = union == 0 ? 0.0 : (double) intersection / union;
+            if (union == 0) continue;
 
-            if (jaccard > 0) {
-                similarity.put(otherId, jaccard);
-            }
+            similarity.put(otherId, (double) intersection / union);
         }
 
         if (similarity.isEmpty()) {
             return getMostPopularBooks(customerToBooks, 5);
         }
 
-        // Top 3 neighbours
+        // Top 3 nearest neighbors
         List<Long> neighbours = similarity.entrySet().stream()
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .limit(3)
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .toList();
 
-        // Books neighbours bought that I didn't
-        Set<Long> candidateBookIds = new HashSet<>();
-        for (Long neighbourId : neighbours) {
-            Set<Long> neighbourBooks =
-                    customerToBooks.getOrDefault(neighbourId, Collections.emptySet());
-            candidateBookIds.addAll(neighbourBooks);
+        // Collect candidate books they bought that user hasn't
+        Set<Long> candidateBooks = new HashSet<>();
+        for (Long id : neighbours) {
+            candidateBooks.addAll(customerToBooks.getOrDefault(id, Set.of()));
         }
-        candidateBookIds.removeAll(myBooks);
+        candidateBooks.removeAll(myBooks);
 
-        if (candidateBookIds.isEmpty()) {
-            return Collections.emptyList();
+        if (candidateBooks.isEmpty()) {
+            return getMostPopularBooks(customerToBooks, 5);
         }
 
-        return br.findAllById(candidateBookIds).stream()
+        return br.findAllById(candidateBooks).stream()
                 .limit(5)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Book> getMostPopularBooks(Map<Long, Set<Long>> customerToBooks, int limit) {
         Map<Long, Long> counts = new HashMap<>();
 
-        for (Set<Long> books : customerToBooks.values()) {
-            for (Long bookId : books) {
-                counts.merge(bookId, 1L, Long::sum);
+        for (var books : customerToBooks.values()) {
+            for (Long id : books) {
+                counts.put(id, counts.getOrDefault(id, 0L) + 1);
             }
         }
 
         if (counts.isEmpty()) {
-            return Collections.emptyList();
+            return br.findAll().stream().limit(limit).toList();
         }
 
-        List<Long> popularIds = counts.entrySet().stream()
+        List<Long> ids = counts.entrySet().stream()
                 .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
                 .limit(limit)
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .toList();
 
-        return br.findAllById(popularIds);
+        return br.findAllById(ids);
     }
 
     @GetMapping("/")
