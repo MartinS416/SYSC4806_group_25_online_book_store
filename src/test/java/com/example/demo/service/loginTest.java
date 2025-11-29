@@ -1,5 +1,4 @@
-package com.example.demo;
-
+package com.example.demo.service;
 
 import com.example.demo.model.Customer;
 import com.example.demo.repository.CustomerRepository;
@@ -9,88 +8,79 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.sql.init.mode=never",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureMockMvc
 @Transactional
 public class loginTest {
 
-
-    @Autowired
-    MockMvc mvc;
-
-    @Autowired
-    CustomerRepository repo;
-
-    @Autowired
-    PasswordEncoder encoder;
+    @Autowired MockMvc mvc;
+    @Autowired CustomerRepository repo;
+    @Autowired PasswordEncoder encoder;
 
     @BeforeEach
     void setup() {
-        repo.deleteAll(); // CLEAN DB to avoid duplicate users
+        System.out.println("=== CLEANING DB ===");
+        repo.deleteAll();
 
         Customer c = new Customer();
         c.setEmail("test@example.com");
         c.setUsername("TestUser");
-        c.setPassword(encoder.encode("password123")); // must match test login
+        c.setPassword(encoder.encode("password123"));
+        c.setRole("USER");
+        c.setFirstName("Test");
+        c.setLastName("User");
+        c.setPhone("1234567890");
+
         repo.save(c);
     }
 
-    /**
-     * Tests the login, see's if it redirects to the proper page, shows authentication works
-     * @throws Exception
-     */
     @Test
     void login_success() throws Exception {
+        System.out.println("=== login_success ===");
+
         mvc.perform(post("/login")
-                        .param("username", "test@example.com") // must match usernameParameter
-                        .param("password", "password123"))     // must match encoded password
+                        .param("username", "test@example.com")
+                        .param("password", "password123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
     }
 
-    /**
-     * Tests password encoding
-     */
     @Test
     void passwordEncoder_hashesCorrectly() {
-        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        System.out.println("=== passwordEncoder_hashesCorrectly ===");
+
         String encoded = encoder.encode("password123");
+
+        System.out.println("Encoded password: " + encoded);
 
         assertNotEquals("password123", encoded);
         assertTrue(encoder.matches("password123", encoded));
     }
 
-    /**
-     * tests if shop is accessable without authentication
-     * @throws Exception
-     */
     @Test
     void shop_isAccessibleWithoutLogin() throws Exception {
+        System.out.println("=== shop_isAccessibleWithoutLogin ===");
+
         mvc.perform(get("/shop"))
                 .andExpect(status().isOk());
     }
 
-    /**
-     * tests if cart is available without being authenticated. Should redirect to login page.
-     * @throws Exception
-     */
     @Test
     void cart_redirectsIfNotLoggedIn() throws Exception {
+        System.out.println("=== cart_redirectsIfNotLoggedIn ===");
+
         mvc.perform(get("/cart"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
     }
-
-
 }
-

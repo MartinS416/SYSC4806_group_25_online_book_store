@@ -2,9 +2,15 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Book;
 import com.example.demo.service.BookService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/books")
@@ -18,12 +24,62 @@ public class AdminBookController {
 
     // LIST ALL BOOKS
     @GetMapping
-    public String listBooks(Model model) {
-        model.addAttribute("books", bookService.findAll());
+    public String listBooks(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            Model model
+    ) {
+
+        model.addAttribute("books",
+                bookService.filterBooks(keyword, category, minPrice, maxPrice));
+
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("category", category);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
+
+        model.addAttribute("categories", bookService.findAllCategories());
+
         return "admin/admin-books";
     }
 
-    // ADD NEW BOOK PAGE
+    //EXPORT TO CSV
+    @GetMapping("/export/csv")
+    public void exportFilteredBooksToCsv(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            HttpServletResponse response
+    ) throws IOException {
+
+        List<Book> filteredBooks = bookService.filterBooks(keyword, category, minPrice, maxPrice);
+
+        response.setContentType("text/csv");
+        String filename = "books-filtered-" + System.currentTimeMillis() + ".csv";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+        PrintWriter writer = response.getWriter();
+
+        writer.println("ID,Title,Author,Category,Price,Stock");
+
+        for (Book book : filteredBooks) {
+            writer.printf("%d,\"%s\",\"%s\",\"%s\",%s,%d%n",
+                    book.getId(),
+                    book.getTitle(),
+                    book.getAuthor(),
+                    book.getCategory(),
+                    book.getPrice(),
+                    book.getStock()
+            );
+        }
+
+        writer.flush();
+    }
+
+    // ADD NEW BOOK
     @GetMapping("/new")
     public String newBook(Model model) {
         model.addAttribute("book", new Book());
