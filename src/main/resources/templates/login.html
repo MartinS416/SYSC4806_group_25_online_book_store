@@ -86,13 +86,11 @@
 
                 <div class="tab-content" id="pills-tabContent">
 
-                    <!-- LOGIN TAB -->
                     <div class="tab-pane fade show active" id="pills-login" role="tabpanel">
 
                         <form th:action="@{/login}" method="post">
                             <h3 class="text-center mb-4">Welcome Back</h3>
 
-                            <!-- LOGIN ERROR MESSAGE -->
                             <div th:if="${param.error}" class="alert alert-danger text-center">
                                 Invalid email or password.
                             </div>
