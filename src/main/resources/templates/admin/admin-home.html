@@ -25,8 +25,16 @@
             transform: translateY(-3px);
             transition: 0.2s ease-in-out;
         }
+        .btn-brand {
+            background-color: var(--brand-red);
+            border: none;
+        }
+        .btn-brand:hover {
+            background-color: var(--brand-red-hover);
+        }
     </style>
 </head>
+
 <body class="container py-4">
 
 <div class="admin-header text-center">
@@ -34,17 +42,28 @@
     <p class="mb-0">Manage the bookstore system</p>
 </div>
 
-<div class="alert alert-success text-center" th:text="${message}"></div>
+<div class="alert alert-success text-center" th:if="${message}" th:text="${message}"></div>
 
 <div class="row g-4">
 
     <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-body text-center">
+                <h3 class="card-title">Dashboard</h3>
+                <p>Overview of sales, books, and system stats.</p>
+                <a class="btn btn-brand text-white" th:href="@{/admin/dashboard}">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
                 <h3 class="card-title">Books</h3>
                 <p>View, add, edit, and delete books.</p>
-                <a class="btn btn-primary"
-                   style="background-color: var(--brand-red); border: none;"
+                <a class="btn btn-brand text-white"
                    th:href="@{/admin/books}">
                     Manage Books
                 </a>
@@ -52,8 +71,17 @@
         </div>
     </div>
 
-
-
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="card-title">Users</h3>
+                <p>Overview of users and their information</p>
+                <a class="btn btn-brand text-white" th:href="@{/admin/customers}">
+                    Go to Users
+                </a>
+            </div>
+        </div>
+    </div>
 
 </div>
 

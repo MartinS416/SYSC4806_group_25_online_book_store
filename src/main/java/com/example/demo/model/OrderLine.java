@@ -19,7 +19,13 @@ public class OrderLine {
     private Book book;
 
     private int quantity;
+
+
+    @Column(precision = 12, scale = 2)
     private BigDecimal price;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal subtotal;
 
     public OrderLine() {}
 
@@ -28,18 +34,36 @@ public class OrderLine {
         this.book = book;
         this.quantity = quantity;
         this.price = price;
+        this.subtotal = price.multiply(BigDecimal.valueOf(quantity));
     }
 
-    // GETTERS //
+    // GETTERS
     public Long getId() { return id; }
     public Order getOrder() { return order; }
     public Book getBook() { return book; }
     public int getQuantity() { return quantity; }
     public BigDecimal getPrice() { return price; }
+    public BigDecimal getSubtotal() { return subtotal; }
 
-    // SETTERS //
+    // SETTERS
     public void setOrder(Order order) { this.order = order; }
     public void setBook(Book book) { this.book = book; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    public void setSubtotal(BigDecimal price) { this.price = price; }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+        if (this.price != null) {
+            this.subtotal = this.price.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+        if (this.quantity > 0) {
+            this.subtotal = price.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
+
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
 }
