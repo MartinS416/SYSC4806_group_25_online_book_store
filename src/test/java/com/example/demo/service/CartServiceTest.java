@@ -1,17 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.model.Cart;
-import com.example.demo.model.CartItem;
-import com.example.demo.model.Book;
-import com.example.demo.model.Order;
-import com.example.demo.model.OrderLine;
-import com.example.demo.model.Customer;
-import com.example.demo.repository.CartRepository;
-import com.example.demo.repository.CartItemRepository;
-import com.example.demo.repository.BookRepository;
-import com.example.demo.repository.OrderRepository;
-import com.example.demo.repository.OrderLineRepository;
-import com.example.demo.repository.CustomerRepository;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +38,9 @@ class CartServiceTest {
     private OrderLineRepository orderLineRepository;
 
     @Mock
+    private AddressRepository addressRepository;
+
+    @Mock
     private CustomerRepository customerRepository;
 
     @InjectMocks
@@ -56,6 +49,7 @@ class CartServiceTest {
     private Cart cart;
     private Book book1;
     private Book book2;
+    private Address address;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +66,16 @@ class CartServiceTest {
         book2 = new Book();
         book2.setId(2L);
         book2.setPrice(BigDecimal.valueOf(15.0));
+
+        address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setStreet("123 street RD");
+        address.setCity("Ottawa");
+        address.setRegion("Ont");
+        address.setCountry("CA");
+        address.setPostcode("A1A 1A1");
     }
 
     @Test
@@ -107,7 +111,7 @@ class CartServiceTest {
         cart.setItems(new ArrayList<>()); // empty
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> cartService.checkout(10L));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> cartService.checkout(10L,address));
         assertEquals("Cannot checkout an empty cart", ex.getMessage());
 
         verify(orderRepository, never()).save(any(Order.class));
@@ -138,7 +142,7 @@ class CartServiceTest {
 
         when(orderLineRepository.save(any(OrderLine.class))).thenAnswer(invocation -> invocation.getArgument(0));
         // run the method under test
-        int created = cartService.checkout(10L);
+        int created = cartService.checkout(10L,address);
 
         assertEquals(2, created);
         verify(orderRepository, times(1)).save(any(Order.class));
