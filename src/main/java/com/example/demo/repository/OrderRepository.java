@@ -9,10 +9,10 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("""
-    SELECT CAST(o.createdAt AS date), SUM(o.totalAmount)
-    FROM Order o
-    GROUP BY CAST(o.createdAt AS date)
-    ORDER BY CAST(o.createdAt AS date)
+        SELECT CAST(o.createdAt AS date), SUM(o.totalAmount)
+        FROM Order o
+        GROUP BY CAST(o.createdAt AS date)
+        ORDER BY CAST(o.createdAt AS date)
     """)
     List<Object[]> getDailyRevenue();
 
@@ -25,4 +25,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Object[]> getOrdersPerDay();
 
+    List<Order> findAllByOrderByCreatedAtDesc();
 }

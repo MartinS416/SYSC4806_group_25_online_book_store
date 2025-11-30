@@ -21,6 +21,7 @@ public class AdminDashboardController {
         model.addAttribute("dailyRevenue", orderService.getDailyRevenue());
         model.addAttribute("topBooks", orderService.getTopSellingBooks());
         model.addAttribute("categoryRevenue", orderService.getRevenueByCategory());
+        model.addAttribute("orders", orderService.getRecentOrders());
 
         return "admin/dashboard"; // loads templates/admin/dashboard.html
     }
