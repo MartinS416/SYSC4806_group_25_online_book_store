@@ -4,30 +4,11 @@
   <meta charset="UTF-8">
   <title>Book Details</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <style>
-    .rating-bar {
-      width: 200px;
-      height: 8px;
-      background: #eee;
-      border-radius: 5px;
-      overflow: hidden;
-      display: inline-block;
-    }
-    .rating-fill {
-      height: 8px;
-      background: #cc0033;
-      border-radius: 5px;
-    }
-    .rating-label {
-      width: 40px;
-      font-weight: bold;
-    }
-  </style>
 </head>
 
 <body class="bg-light">
 
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#CC0033;">
   <div class="container">
     <a class="navbar-brand" href="/shop">Online Bookstore</a>
@@ -36,105 +17,112 @@
 
 <div class="container mt-4">
 
+  <!-- If book not found -->
   <div th:if="${book == null}">
     <p class="text-danger">Book not found.</p>
   </div>
 
-  <div th:if="${book != null}" class="card p-4 shadow-sm">
+  <!-- Book Info -->
+  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <h2 class="card-title mb-3" th:text="${book.title}">Book Title</h2>
+    <h2 th:text="${book.title}" class="mb-2"></h2>
 
-    <p class="card-text">
-      <strong>Author:</strong> <span th:text="${book.author}"></span><br>
-      <strong>Category:</strong> <span th:text="${book.category}"></span><br>
-      <strong>Price:</strong> $<span th:text="${book.price}"></span><br>
-      <strong>Stock:</strong> <span th:text="${book.stock}"></span><br>
-    </p>
+    <p class="mb-1"><strong>Author:</strong> <span th:text="${book.author}"></span></p>
+    <p class="mb-1"><strong>Category:</strong> <span th:text="${book.category}"></span></p>
+    <p class="mb-1"><strong>Price:</strong> $<span th:text="${book.price}"></span></p>
+    <p class="mb-3"><strong>Stock:</strong> <span th:text="${book.stock}"></span></p>
 
+    <!-- Add to Cart -->
     <form th:action="@{'/cart/add/' + ${book.id}}" method="post">
-      <button type="submit" class="btn text-white border-0" style="background-color: #CC0033;">
+      <button type="submit" class="btn text-white border-0" style="background-color:#CC0033;">
         Add to Cart
       </button>
     </form>
 
-    <hr class="my-4">
+    <a href="/shop" class="btn btn-secondary mt-3">Back to Shop</a>
+  </div>
 
-    <!-- ⭐⭐ AVERAGE RATING ⭐⭐ -->
-    <h4>Average Rating</h4>
-    <h2 th:text="${averageRating} + ' / 5'" class="text-warning"></h2>
+  <!-- Rating Summary -->
+  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <hr>
+    <h4>Customer Ratings</h4>
 
-    <!-- ⭐⭐ RATING BREAKDOWN ⭐⭐ -->
-    <h4>Rating Breakdown</h4>
-    <div class="rating-container" style="width: 100%; max-width: 400px;">
-      <div th:each="i : ${#numbers.sequence(1,5)}" class="d-flex align-items-center mb-2">
+    <p>
+      <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)}"></strong> / 5 ★
+      <span class="text-muted" th:text="'(' + ${reviews.size()} + ' reviews)'"></span>
+    </p>
 
-        <!-- Corrected label: 5★ to 1★ -->
-        <div class="rating-label" th:text="|${6 - i}★|"></div>
+    <!-- Rating breakdown (5 to 1) -->
+    <div th:each="i : ${#numbers.sequence(5,1)}" class="mb-2">
 
-        <div class="rating-bar ms-2">
-          <div class="rating-fill"
-               th:style="|width:${(breakdown[5 - i] * 100.0) / (reviews.size() == 0 ? 1 : reviews.size())}%|">
-          </div>
+      <span th:text="${i} + '★:'"></span>
+
+      <div style="width:200px;height:10px;background:#ddd;display:inline-block;margin:0 10px;vertical-align:middle;">
+        <div style="background:#CC0033;height:10px;"
+             th:style="${'width:' +
+                     ((breakdown[5 - i.intValue()] * 100.0) /
+                     (reviews.size() == 0 ? 1 : reviews.size())) + '%'}">
         </div>
-
-        <span class="ms-3" th:text="${breakdown[5 - i]}"></span>
       </div>
+
+      <span th:text="${breakdown[5 - i.intValue()]}"></span>
+
     </div>
+  </div>
 
-    <hr>
+  <!-- Reviews List -->
+  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <!-- ⭐⭐ REVIEW LIST ⭐⭐ -->
-    <h4>Reviews</h4>
+    <h4 class="mb-3">Customer Reviews</h4>
+
     <div th:if="${reviews.isEmpty()}">
-      <p>No reviews yet.</p>
+      <p class="text-muted">No reviews yet. Be the first to review!</p>
     </div>
 
-    <div th:each="rev : ${reviews}" class="border rounded p-3 mb-3 bg-white">
-      <strong th:text="${rev.reviewerName}"></strong>
-      <span class="text-warning ms-2" th:text="${rev.rating} + '★'"></span>
-      <p class="mt-2" th:text="${rev.content}"></p>
+    <div th:each="review : ${reviews}" class="border rounded p-3 mb-3">
+      <h6 th:text="${review.reviewerName}"></h6>
+      <p class="text-warning"><span th:text="${review.rating}"></span>★</p>
+      <p th:text="${review.content}"></p>
     </div>
+  </div>
 
-    <hr>
+  <!-- Leave a Review -->
+  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <!-- ⭐⭐ ADD REVIEW ⭐⭐ -->
-    <h4>Leave a Review</h4>
-    <form th:action="@{'/book/' + ${book.id} + '/review'}" method="post" class="mt-3">
+    <h4 class="mb-3">Leave a Review</h4>
+
+    <form th:action="@{'/books/' + ${book.id} + '/reviews'}" method="post">
 
       <div class="mb-3">
         <label class="form-label">Your Name</label>
-        <input required name="reviewerName" class="form-control">
+        <input type="text" name="reviewerName" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label">Rating</label>
-        <select name="rating" class="form-select" required>
-          <option value="5">5 ★★★★★</option>
-          <option value="4">4 ★★★★</option>
-          <option value="3">3 ★★★</option>
-          <option value="2">2 ★★</option>
+        <select name="rating" class="form-control" required>
+          <option value="5">5 ★</option>
+          <option value="4">4 ★</option>
+          <option value="3">3 ★</option>
+          <option value="2">2 ★</option>
           <option value="1">1 ★</option>
         </select>
       </div>
 
       <div class="mb-3">
         <label class="form-label">Review</label>
-        <textarea required name="content" class="form-control"></textarea>
+        <textarea name="content" class="form-control" rows="4" required></textarea>
       </div>
 
-      <button type="submit"
-              class="btn text-white border-0"
-              style="background-color:#CC0033;">
+      <button type="submit" class="btn text-white" style="background-color:#CC0033;">
         Submit Review
       </button>
     </form>
 
-    <a href="/shop" class="btn btn-secondary mt-3">Back to Shop</a>
-
   </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
