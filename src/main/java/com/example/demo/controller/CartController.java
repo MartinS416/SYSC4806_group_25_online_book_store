@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.Address;
+import com.example.demo.model.Book;
 import com.example.demo.model.Cart;
 import com.example.demo.model.Customer;
+import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.security.CustomUserDetails;
@@ -58,7 +61,12 @@ public class CartController {
 
         Customer customer = customerRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
-
+        Book book = books.getReferenceById(id);
+        if(book.getStock() > 0){
+            book.setStock(book.getStock() - 1);
+        } else {
+            return "redirect:/shop";
+        }
         Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
         cartService.addItem(cart.getId(), id, 1);
         return "redirect:/shop";
@@ -115,23 +123,31 @@ public class CartController {
      * @return New cart view with a paid flag set as confirmation of payment.
      */
     @PostMapping("/cart/checkout")
-    public String checkout(@AuthenticationPrincipal CustomUserDetails principal) {
+    public String checkout(@AuthenticationPrincipal CustomUserDetails principal, SessionStatus status,
+                           @RequestParam("cardNumber") String cardNumber, @RequestParam("expiry") String expiry,
+                           @RequestParam("cvv") String cvv, @RequestParam("firstName") String fname,
+                           @RequestParam("lastName") String lname,  @RequestParam("street") String street,
+                           @RequestParam("unit") String unit,  @RequestParam("city") String city,
+                           @RequestParam("region") String region,  @RequestParam("country") String country,
+                           @RequestParam("postal") String postal) {
         if (principal == null) return "redirect:/login";
-
         Customer customer = customerRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
-
-        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
-        cartService.checkout(cart.getId());
-        return "redirect:/shop?paid=true";
-    }
-
-    @PostMapping("/cart/pay")
-    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status,
-                      @RequestParam("cardNumber") String cardNumber, @RequestParam("expiry") String expiry,
-                      @RequestParam("cvv") String cvv) {
-        if (cartService.processPayment(cart, cardNumber, expiry, cvv)) {
-            status.setComplete();
+        if (cartService.checkCard(cardNumber, expiry, cvv)) {
+            Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+            Address billing = new Address();
+            billing.setFirstName(fname);
+            billing.setLastName(lname);
+            billing.setStreet(street);
+            billing.setCity(city);
+            billing.setRegion(region);
+            billing.setCountry(country);
+            billing.setPostcode(postal);
+            billing.setCustomer(customer);
+            if (!unit.isEmpty()){
+                billing.setUnit(unit);
+            }
+            cartService.checkout(cart.getId(), billing);
             return "redirect:/shop?paid=true";
         } else {
             return "redirect:/cart?paid=false";

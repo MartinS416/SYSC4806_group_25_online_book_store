@@ -60,8 +60,13 @@ class CartControllerTest {
         cart = new Cart(customer);
         ReflectionTestUtils.setField(cart, "id", 10L);
 
+        Book book = new Book();
+        ReflectionTestUtils.setField(book, "id", 1L);
+        book.setStock(10);
+
         when(customerRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
         when(cartService.findOrCreateCartForCustomer(customer.getId())).thenReturn(cart);
+        when(bookRepository.getReferenceById(1L)).thenReturn(book);
     }
 
     @Test

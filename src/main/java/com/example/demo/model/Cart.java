@@ -27,7 +27,9 @@ public class Cart {
     // CONSTRUCTORS //
     public Cart() {}
 
-    public Cart(Customer customer) { this.customer = customer; }
+    public Cart(Customer customer) {
+        this.customer = customer;
+    }
 
     // GETTERS //
     public Long getId() { return id; }

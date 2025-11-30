@@ -113,6 +113,7 @@
             </tr>
             </tbody>
         </table>
+        <p><small>*Notice: Your cart will be emptied after 5-10 minutes of inactivity</small></p>
 
         <h3>Total: <span th:text="${#numbers.formatDecimal(total,1,2)}"></span> $</h3>
 
@@ -123,7 +124,7 @@
     </div>
 
     <div>
-        <form th:action="@{/cart/pay}" method="post" class="p-4 rounded shadow-sm bg-white" style="max-width: 400px;">
+        <form th:action="@{/cart/checkout}" method="post" class="p-4 rounded shadow-sm bg-white" style="max-width: 400px;">
             <h5 class="mb-3 text-center">Payment Details</h5>
 
             <div class="mb-3">
@@ -144,6 +145,51 @@
                            pattern="[0-9]{3}" inputmode="numeric" required>
                 </div>
             </div>
+
+            <h5>&ensp;</h5>
+            <h5 class="mb-3 text-center">Billing Address</h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="John" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="smith" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="street" class="form-label">Address Line 1</label>
+                <input type="text" class="form-control" id="street" name="street" placeholder="123 street rd" required>
+            </div>
+            <div class="mb-3">
+                <label for="unit" class="form-label">Address Line 2 (Optional)</label>
+                <input type="text" class="form-control" id="unit" name="unit">
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" placeholder="Ottawa" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="region" class="form-label">Region</label>
+                    <input type="text" class="form-control" id="region" name="region" placeholder="Ontario" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="postal" class="form-label">Postal code</label>
+                    <input type="text" class="form-control" id="postal" name="postal" placeholder="A1A 1A1" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="country" class="form-label">Country</label>
+                    <input type="text" class="form-control" id="country" name="country" placeholder="canada" required>
+                </div>
+            </div>
+
+
 
             <button type="submit" class="btn w-100 text-white border-0"
                     style="background-color: #CC0033; --bs-btn-hover-bg: #b3002d;">

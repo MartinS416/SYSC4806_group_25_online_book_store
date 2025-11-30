@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +26,11 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final BookRepository bookRepository;
     private final OrderRepository orderRepository;
+    private final AddressRepository addressRepository;
     private final OrderLineRepository orderLineRepository;
     private final CustomerRepository customerRepository;
+
+    private List<Long> killList;
 
     /**
      * Constructor.
@@ -41,13 +45,16 @@ public class CartService {
                        BookRepository bookRepository,
                        OrderRepository orderRepository,
                        OrderLineRepository orderLineRepository,
-                       CustomerRepository customerRepository) {
+                       CustomerRepository customerRepository,
+                       AddressRepository addressRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.bookRepository = bookRepository;
         this.orderRepository = orderRepository;
         this.orderLineRepository = orderLineRepository;
         this.customerRepository = customerRepository;
+        this.addressRepository = addressRepository;
+        this.killList = new ArrayList<>();
     }
 
     /**
@@ -106,6 +113,8 @@ public class CartService {
             toSave = ci;
         }
 
+        killList.remove(cartId);
+
         CartItem saved = cartItemRepository.save(toSave);
         cartRepository.save(cart); // persist relationship changes
         return saved;
@@ -131,6 +140,9 @@ public class CartService {
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Cart item not found for book: " + bookId));
 
+        Book book = bookRepository.getById(bookId);
+        book.setStock(book.getStock() + quantity);
+
         if (quantity >= existing.getQuantity()) {
             cart.removeItem(existing);
             cartItemRepository.delete(existing);
@@ -138,6 +150,8 @@ public class CartService {
             existing.setQuantity(existing.getQuantity() - quantity);
             cartItemRepository.save(existing);
         }
+
+        killList.remove(cartId);
 
         cartRepository.save(cart);
     }
@@ -183,6 +197,7 @@ public class CartService {
                 .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
         List<CartItem> copy = new ArrayList<>(cart.getItems());
         for (CartItem ci : copy) {
+            removeItem(cartId, ci.getBook().getId(), ci.getQuantity());
             cart.removeItem(ci);
             cartItemRepository.delete(ci);
         }
@@ -197,7 +212,7 @@ public class CartService {
      * @throws IllegalStateException if the cart is empty.
      */
     @Transactional
-    public int checkout(Long cartId) {
+    public int checkout(Long cartId, Address address) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
 
@@ -209,8 +224,9 @@ public class CartService {
         Order order = new Order();
         order.setCustomer(cart.getCustomer());
         order.setCreatedAt(Instant.now());
+        addressRepository.save(address);
+        order.setAddress(address);
         Order savedOrder = orderRepository.save(order);
-
         int count = 0;
         for (CartItem ci : new ArrayList<>(items)) {
             OrderLine line = new OrderLine();
@@ -232,21 +248,16 @@ public class CartService {
         return count;
     }
 
-    //Simple process payment method, to be changed later, just updates the stock of the book and clears the session to empty the cart.
-    public boolean processPayment(Map<Long, Integer> cart, String cardNumber, String expiry, String cvv) {
-        if(checkCard(cardNumber,expiry,cvv)) {
-            System.out.println("not expired");
-            cart.forEach((bookId, qty) -> {
-                bookRepository.findById(bookId).ifPresent(book -> {
-                    int stock = Math.max(0, book.getStock() - qty);
-                    book.setStock(stock);
-                    bookRepository.save(book);
-                });
-            });
-            return true;
-        } else {
-            System.out.println("card expired");
-            return false;
+    @Scheduled(fixedRate = 300000)
+    public void emptyOldCarts() {
+        //runs every five minutes. clearing any usused carts
+        for(Cart c: cartRepository.findAll()){
+            if(killList.contains(c.getId())){
+                clearCart(c.getId());
+                killList.remove(c.getId());
+            } else {
+                killList.add(c.getId());
+            }
         }
     }
 
