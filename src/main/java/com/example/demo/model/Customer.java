@@ -19,6 +19,9 @@ public class Customer {
     private String firstName;
     private String lastName;
     private String phone;
+    private String role = "USER";
+
+
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderInfos = new ArrayList<>();
@@ -59,6 +62,8 @@ public class Customer {
     public List<Order> getOrderInfos() {  return orderInfos; }
     public List<Cart> getCarts() {  return carts; }
     public List<Address> getAddresses() {  return addresses; }
+    public String getRole() {return role;}
+
 
     // SETTERS //
     public void setId(Long id) { this.id = id; }
@@ -68,7 +73,7 @@ public class Customer {
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
     public void setPhone(String phone) { this.phone = phone; }
-
+    public void setRole(String role) {this.role = role;}
     // DB Management //
     public void addOrderInfo(Order order) { orderInfos.add(order); }
     public void addCart(Cart cart) { carts.add(cart); }

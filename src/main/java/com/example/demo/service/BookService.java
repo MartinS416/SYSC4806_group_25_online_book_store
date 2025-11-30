@@ -4,6 +4,7 @@ import com.example.demo.model.Book;
 import com.example.demo.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -20,7 +21,15 @@ public class BookService {
                 .orElseThrow(() -> new IllegalArgumentException("Book not found: " + id));
     }
 
+    public Book save(Book book) {
+        return bookRepository.save(book);
+    }
+
     public List<Book> findAll() { return bookRepository.findAll(); }
+
+    public List<Book> searchBooks(String keyword) {
+        return bookRepository.searchBooks(keyword);
+    }
 
     public Book update(Long id, Book updated) {
         Book book = findById(id);
@@ -32,6 +41,15 @@ public class BookService {
         book.setStock(updated.getStock());
 
         return bookRepository.save(book);
+    }
+
+    public List<Book> filterBooks(String keyword, String category,
+                                  BigDecimal minPrice, BigDecimal maxPrice) {
+        return bookRepository.filterBooks(keyword, category, minPrice, maxPrice);
+    }
+
+    public List<String> findAllCategories() {
+        return bookRepository.findDistinctCategories();
     }
 
     public void delete(Long id) { bookRepository.deleteById(id); }

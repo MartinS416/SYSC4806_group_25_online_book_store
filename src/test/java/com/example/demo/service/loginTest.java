@@ -2,7 +2,9 @@ package com.example.demo;
 
 
 import com.example.demo.model.Customer;
+import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.CustomerRepository;
+import com.example.demo.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,9 +36,18 @@ public class loginTest {
     @Autowired
     PasswordEncoder encoder;
 
+    @Autowired
+    OrderRepository orderRepo;     // add this repo
+    @Autowired
+    AddressRepository addressRepo; // add this repo
+
     @BeforeEach
     void setup() {
-        repo.deleteAll(); // CLEAN DB to avoid duplicate users
+        System.out.println("=== CLEANING DB ===");
+        orderRepo.deleteAll();       // delete child records first
+        addressRepo.deleteAll();     // then addresses
+        repo.deleteAll();            // then customers
+
 
         Customer c = new Customer();
         c.setEmail("test@example.com");

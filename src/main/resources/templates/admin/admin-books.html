@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book List</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background: #ffffff;
+            border-right: 1px solid #dee2e6;
+            padding: 20px;
+            position: fixed;
+        }
+
+        .sidebar h5 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 8px 0;
+            color: #555;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            color: #000;
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        .table thead th {
+            background-color: #f1f3f5;
+            font-weight: 600;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 8px;
+        }
+
+        .btn-light-border {
+            border: 1px solid #ced4da;
+            background: white;
+        }
+        .btn-light-border:hover {
+            background: #f1f1f1;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <a th:href="@{/admin/books}">Book List</a>
+    <a th:href="@{/admin/books/new}">Add New Book</a>
+    <hr>
+</div>
+
+<div class="content">
+    <div class="filter-card p-3 mb-4 border rounded bg-white shadow-sm">
+        <h5 class="mb-3">Filter Books</h5>
+
+        <form method="get" class="row g-3">
+
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Keyword</label>
+                <input type="text" class="form-control"
+                       name="keyword" th:value="${keyword}"
+                       placeholder="Title or Author">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option th:each="c : ${categories}"
+                            th:value="${c}"
+                            th:text="${c}"
+                            th:selected="${c == category}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Min Price</label>
+                <input type="number" step="0.01" min="0"
+                       class="form-control"
+                       name="minPrice" th:value="${minPrice}"
+                       placeholder="0.00">
+            </div>
+
+            <!-- Max Price -->
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Max Price</label>
+                <input type="number" step="0.01" min="0"
+                       class="form-control"
+                       name="maxPrice" th:value="${maxPrice}"
+                       placeholder="99.99">
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-secondary w-100" type="submit">
+                    Apply Filters
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-semibold">Book List</h2>
+
+        <div class="d-flex gap-2">
+            <a class="btn btn-light-border btn-sm"
+               th:href="@{/admin/books/export/csv(
+                keyword=${keyword},
+                category=${category},
+                minPrice=${minPrice},
+                maxPrice=${maxPrice}
+            )}">
+                Export CSV
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle small">
+            <thead>
+            <tr>
+                <th style="width: 30%;">Title</th>
+                <th style="width: 20%;">Author</th>
+                <th style="width: 15%;">Category</th>
+                <th style="width: 10%;">Price</th>
+                <th style="width: 10%;">Stock</th>
+                <th style="width: 15%;">Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="book : ${books}">
+                <td th:text="${book.title}"></td>
+                <td th:text="${book.author}"></td>
+                <td th:text="${book.category}"></td>
+                <td th:text="${book.price}"></td>
+                <td th:text="${book.stock}"></td>
+
+                <td>
+                    <a th:href="@{'/admin/books/edit/' + ${book.id}}"
+                       class="btn btn-warning btn-sm">Edit</a>
+
+                    <button class="btn btn-danger btn-sm"
+                            data-bs-toggle="modal"
+                            th:attr="data-bs-target='#deleteModal-' + ${book.id}">
+                        Delete
+                    </button>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade"
+                         th:id="'deleteModal-' + ${book.id}"
+                         tabindex="-1" aria-hidden="true">
+
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    Are you sure you want to delete:
+                                    <strong th:text="${book.title}"></strong>?
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                                    <a th:href="@{'/admin/books/delete/' + ${book.id}}"
+                                       class="btn btn-danger">Yes, Delete</a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
