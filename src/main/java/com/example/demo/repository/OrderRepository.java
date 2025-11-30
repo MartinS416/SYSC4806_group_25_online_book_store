@@ -16,11 +16,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Object[]> getDailyRevenue();
 
+
     @Query("""
-        SELECT CAST(o.createdAt AS date), COUNT(o)
-        FROM Order o
-        GROUP BY CAST(o.createdAt AS date)
-        ORDER BY CAST(o.createdAt AS date)
+    SELECT CAST(o.createdAt AS date), COUNT(o)
+    FROM Order o
+    GROUP BY CAST(o.createdAt AS date)
+    ORDER BY CAST(o.createdAt AS date)
     """)
     List<Object[]> getOrdersPerDay();
 
