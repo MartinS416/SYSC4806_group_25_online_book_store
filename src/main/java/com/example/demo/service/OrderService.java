@@ -22,6 +22,10 @@ public class OrderService {
         this.orderLineRepository = orderLineRepository;
     }
 
+    public List<Order> getRecentOrders() {
+        return orderRepository.findAllByOrderByCreatedAtDesc();
+    }
+
     public Order create(Order order) { return orderRepository.save(order); }
 
     public Order findById(Long id) {

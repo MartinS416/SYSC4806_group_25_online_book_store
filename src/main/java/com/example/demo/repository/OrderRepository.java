@@ -9,7 +9,7 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("""
-        SELECT CAST(o.createdAt AS date), SUM(o.total)
+        SELECT CAST(o.createdAt AS date), SUM(o.totalAmount)
         FROM Order o
         GROUP BY CAST(o.createdAt AS date)
         ORDER BY CAST(o.createdAt AS date)
@@ -24,4 +24,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Object[]> getOrdersPerDay();
 
+    List<Order> findAllByOrderByCreatedAtDesc();
 }
