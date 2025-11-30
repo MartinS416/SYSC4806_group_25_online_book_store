@@ -95,6 +95,14 @@
                                 Invalid email or password.
                             </div>
 
+                            <div th:if="${param.resetSent}" class="alert alert-success text-center">
+                                A password reset link has been sent to your email.
+                            </div>
+
+                            <div th:if="${param.resetError}" class="alert alert-danger text-center">
+                                No account found with that email.
+                            </div>
+
                             <div class="form-floating mb-3">
                                 <input type="email" id="loginEmail" name="username" class="form-control" placeholder="name@example.com" required />
                                 <label for="loginEmail">Email address</label>
@@ -111,6 +119,8 @@
                                 Sign In
                             </button>
                         </form>
+
+
                     </div>
 
                     <div class="tab-pane fade" id="pills-register" role="tabpanel">
