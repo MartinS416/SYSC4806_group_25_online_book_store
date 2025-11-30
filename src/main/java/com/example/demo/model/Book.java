@@ -1,8 +1,9 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Book {
@@ -16,6 +17,10 @@ public class Book {
     private BigDecimal price;
     private String category;
     private int stock;
+
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews = new ArrayList<>();
 
     public Book() {}
 
@@ -34,10 +39,20 @@ public class Book {
     public String getCategory() { return category; }
     public int getStock() { return stock; }
 
+
+    public List<Review> getReviews() { return reviews; }
+
+
     public void setId(Long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setAuthor(String author) { this.author = author; }
     public void setPrice(BigDecimal price) { this.price = price; }
     public void setCategory(String category) { this.category = category; }
-    public void setStock(int stock) {this.stock = stock; }
+    public void setStock(int stock) { this.stock = stock; }
+
+    
+    public void addReview(Review review) {
+        reviews.add(review);
+        review.setBook(this);
+    }
 }
