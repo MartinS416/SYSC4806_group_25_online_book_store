@@ -235,8 +235,6 @@ public class CartService {
             line.setSubtotal(ci.getBook().getPrice());
             line.setOrder(savedOrder);
             orderLineRepository.save(line);
-            Book book = bookRepository.getReferenceById(ci.getId());
-            System.out.println(book.getStock());
             count++;
         }
 
@@ -255,31 +253,11 @@ public class CartService {
         //runs every five minutes. clearing any usused carts
         for(Cart c: cartRepository.findAll()){
             if(killList.contains(c.getId())){
-                System.out.println("clearing: " + c.getId().toString());
                 clearCart(c.getId());
                 killList.remove(c.getId());
             } else {
-                System.out.println("added to kill list: " + c.getId().toString());
                 killList.add(c.getId());
             }
-        }
-    }
-
-    //Simple process payment method, to be changed later, just updates the stock of the book and clears the session to empty the cart.
-    public boolean processPayment(Map<Long, Integer> cart, String cardNumber, String expiry, String cvv) {
-        if(checkCard(cardNumber,expiry,cvv)) {
-            System.out.println("not expired");
-            cart.forEach((bookId, qty) -> {
-                bookRepository.findById(bookId).ifPresent(book -> {
-                    int stock = Math.max(0, book.getStock() - qty);
-                    book.setStock(stock);
-                    bookRepository.save(book);
-                });
-            });
-            return true;
-        } else {
-            System.out.println("card expired");
-            return false;
         }
     }
 

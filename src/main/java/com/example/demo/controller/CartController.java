@@ -32,15 +32,6 @@ public class CartController {
         this.books = books;
         this.cartService = cartService;
         this.customerRepository = customerRepository;
-
-        Book fantasyBook = new Book(); //remove later
-        fantasyBook.setTitle("The Hobbit");
-        fantasyBook.setAuthor("J.R.R. Tolkien");
-        fantasyBook.setCategory("Fantasy");
-        fantasyBook.setPrice(new BigDecimal("14.99"));
-        fantasyBook.setStock(10);
-
-        books.save(fantasyBook);
     }
 
     /**
@@ -157,21 +148,6 @@ public class CartController {
                 billing.setUnit(unit);
             }
             cartService.checkout(cart.getId(), billing);
-            return "redirect:/shop?paid=true";
-        } else {
-            return "redirect:/cart?paid=false";
-        }
-    }
-
-    @PostMapping("/cart/pay")
-    public String pay(@ModelAttribute("cart") Map<Long, Integer> cart, SessionStatus status,
-                      @RequestParam("cardNumber") String cardNumber, @RequestParam("expiry") String expiry,
-                      @RequestParam("cvv") String cvv, @RequestParam("firstName") String fname,
-                      @RequestParam("lastName") String lname,  @RequestParam("street") String street,
-                      @RequestParam("unit") String unit,  @RequestParam("city") String city,
-                      @RequestParam("region") String region,  @RequestParam("country") String country) {
-        if (cartService.processPayment(cart, cardNumber, expiry, cvv)) {
-            status.setComplete();
             return "redirect:/shop?paid=true";
         } else {
             return "redirect:/cart?paid=false";
