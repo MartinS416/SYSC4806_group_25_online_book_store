@@ -15,10 +15,10 @@ public interface OrderLineRepository extends JpaRepository<OrderLine, Long> {
 
     // Top-selling books
     @Query("""
-        SELECT ol.book.title, SUM(ol.quantity)
-        FROM OrderLine ol
-        GROUP BY ol.book.id
-        ORDER BY SUM(ol.quantity) DESC
+    SELECT ol.book.title, SUM(ol.quantity)
+    FROM OrderLine ol
+    GROUP BY ol.book.id, ol.book.title
+    ORDER BY SUM(ol.quantity) DESC
     """)
     List<Object[]> getTopSellingBooks();
 
