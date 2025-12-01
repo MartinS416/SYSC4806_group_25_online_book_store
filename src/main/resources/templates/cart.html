@@ -63,28 +63,50 @@
         </div>
     </div>
 </nav>
-<div class="popup-container" id="myForm">
+<div class="popup-container" id="emptyForm">
     <div class="popup-content">
         <h1>Error</h1>
-        <p>payment could not be processed</p>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        <p>payment could not be processed:</p>
+        <p>cart is empty<p>
+        <button type="button" class="btn cancel" onclick="closeEForm()">Close</button>
+    </div>
+</div>
+<div class="popup-container" id="cardForm">
+    <div class="popup-content">
+        <h1>Error</h1>
+        <p>payment could not be processed:</p>
+        <p>card information is invalid or expired<p>
+        <button type="button" class="btn cancel" onclick="closeCForm()">Close</button>
     </div>
 </div>
 <script>
-    function openForm() {
-        document.getElementById("myForm").style.display = "flex";
+    function openEForm() {
+        document.getElementById("emptyForm").style.display = "flex";
     }
 
-    function closeForm() {
-        document.getElementById("myForm").style.display = "none";
+    function closeEForm() {
+        document.getElementById("emptyForm").style.display = "none";
+    }
+
+    function openCForm() {
+        document.getElementById("cardForm").style.display = "flex";
+    }
+
+    function closeCForm() {
+        document.getElementById("cardForm").style.display = "none";
     }
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    if(urlParams.get('paid')=="false"){
-        openForm();
+    if(urlParams.get('result')=="1"){
+        openCForm();
+        closeEForm();
+    } else if(urlParams.get('result')=="2"){
+        openEForm();
+        closeCForm();
     } else {
-        closeForm();
+        closeEForm();
+        closeCForm();
     }
 </script>
 <div style="display: flex; align-items: flex-start; justify-content: center; gap: 40px; margin-top: 20px; flex-wrap: wrap;">

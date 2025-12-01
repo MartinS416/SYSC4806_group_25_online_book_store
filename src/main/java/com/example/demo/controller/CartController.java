@@ -9,6 +9,7 @@ import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.CartService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -147,10 +148,18 @@ public class CartController {
             if (!unit.isEmpty()){
                 billing.setUnit(unit);
             }
-            cartService.checkout(cart.getId(), billing);
+            try {
+                cartService.checkout(cart.getId(), billing);
+            } catch (Exception e) {
+                if(e instanceof IllegalStateException){
+                    return "redirect:/cart?result=2";
+                } else {
+                    throw e;
+                }
+            }
             return "redirect:/shop?paid=true";
         } else {
-            return "redirect:/cart?paid=false";
+            return "redirect:/cart?result=1";
         }
     }
 
