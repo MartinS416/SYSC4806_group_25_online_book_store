@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -171,6 +172,7 @@ public class CartController {
                     throw e;
                 }
             }
+            cartService.clearCart(cart.getId());
             return "redirect:/shop?paid=true";
         } else {
             return "redirect:/cart?result=1";
@@ -193,5 +195,51 @@ public class CartController {
         Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
         cartService.clearCart(cart.getId());
         return "redirect:/shop";
+    }
+
+    @PostMapping("/cart/add-ajax/{id}")
+    @ResponseBody
+    public Map<String, Object> addAjax(@PathVariable Long id,
+                                       @AuthenticationPrincipal CustomUserDetails principal) {
+
+        Map<String, Object> result = new HashMap<>();
+
+        if (principal == null) {
+            result.put("error", "not_logged_in");
+            return result;
+        }
+
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElse(null);
+
+        if (customer == null) {
+            result.put("error", "customer_not_found");
+            return result;
+        }
+
+        Book book = books.findById(id).orElse(null);
+        if (book == null) {
+            result.put("error", "book_not_found");
+            return result;
+        }
+
+        // --- Check stock before updating ---
+        if (book.getStock() <= 0) {
+            result.put("error", "out_of_stock");
+            return result;
+        }
+
+        // --- Reduce stock ---
+        book.setStock(book.getStock() - 1);
+        books.save(book);
+
+        // --- Add item to cart ---
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        cartService.addItem(cart.getId(), id, 1);
+        // --- Return JSON to front-end ---
+        result.put("newStock", book.getStock());
+        result.put("success", true);
+
+        return result;
     }
 }
