@@ -13,13 +13,11 @@
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #CC0033;">
     <div class="container">
         <a class="navbar-brand" href="#">
-    <span th:if="${#authorization.expression('isAuthenticated()')}"
-          th:text="${#authentication.principal.displayName + '’s Online Bookstore'}">
-    </span>
 
-            <span th:if="${#authorization.expression('!isAuthenticated()')}">
-        Online Bookstore
-    </span>
+            <span th:if="${#authorization.expression('isAuthenticated()')}">
+    Your Profile
+</span>
+
         </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
