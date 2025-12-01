@@ -110,17 +110,6 @@
     function openForm() {
         document.getElementById("successNotice").style.display = "flex";
     }
-<div class="popup-container" id="successNotice">
-    <div class="popup-content">
-        <h1>Success</h1>
-        <p>your purchase was successful</p>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
-    </div>
-</div>
-<script>
-    function openForm() {
-        document.getElementById("successNotice").style.display = "flex";
-    }
 
     function closeForm() {
         document.getElementById("successNotice").style.display = "none";
@@ -134,40 +123,6 @@
     }
 </script>
 
-    function closeForm() {
-        document.getElementById("successNotice").style.display = "none";
-    }
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    if(urlParams.get('paid')=="true"){
-        openForm();
-    } else {
-        closeForm();
-    }
-</script>
-<div class="popup-container" id="successNotice">
-    <div class="popup-content">
-        <h1>Success</h1>
-        <p>your purchase was successful</p>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
-    </div>
-</div>
-<script>
-    function openForm() {
-        document.getElementById("successNotice").style.display = "flex";
-    }
-
-    function closeForm() {
-        document.getElementById("successNotice").style.display = "none";
-    }
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    if(urlParams.get('paid')=="true"){
-        openForm();
-    } else {
-        closeForm();
-    }
-</script>
 <div class="container mt-4">
     <div class="row">
 
