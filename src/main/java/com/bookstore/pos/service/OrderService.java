@@ -50,31 +50,33 @@ public class OrderService {
 
     public void delete(Long id) { orderRepository.deleteById(id); }
 
-    public Order createOrder(Customer customer, Address address, List<CartItem> cartItems) {
-
-        Order order = new Order();
-        order.setCustomer(customer);
-        order.setAddress(address);
-        order.setName(customer.getFirstName() + " " + customer.getLastName());
-        order.setEmail(customer.getEmail());
-        order.setPhone(customer.getPhone());
-
-        for (CartItem cartItem : cartItems) {
-            OrderLine line = new OrderLine();
-            line.setOrder(order);
-            line.setBook(cartItem.getBook());
-            line.setQuantity(cartItem.getQuantity());
-            line.setPrice(cartItem.getBook().getPrice());
-            line.setSubtotal(cartItem.getBook().getPrice()
-                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-
-            order.getOrderLines().add(line);
-            order.setTotalAmount(
-                    order.getTotalAmount().add(line.getSubtotal())
-            );
-        }
-
-        return orderRepository.save(order);
+    public Order createOrder(Customer customer, Address address, List<CartItem> items) {
+    Order order = new Order();
+    order.setCustomer(customer);
+    order.setAddress(address);
+    order.setName(customer.getFirstName() + " " + customer.getLastName());
+    order.setEmail(customer.getEmail());
+    order.setPhone(customer.getPhone());
+    
+    BigDecimal total = BigDecimal.ZERO;
+    
+    for (CartItem item : items) {
+        OrderLine line = new OrderLine();
+        line.setOrder(order);
+        line.setBook(item.getBook());
+        line.setQuantity(item.getQuantity());
+        
+        // Calculate line subtotal: price × quantity
+        BigDecimal linePrice = item.getBook().getPrice()
+            .multiply(new BigDecimal(item.getQuantity()));
+        total = total.add(linePrice);
+        
+        order.getOrderLines().add(line);
+    }
+    
+    order.setTotalAmount(total);
+    
+    return orderRepository.save(order);
     }
 
     public List<Map<String, Object>> getDailyRevenue() {
