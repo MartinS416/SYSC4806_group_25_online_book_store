@@ -36,7 +36,7 @@ public class Order {
     private OrderStatus status = OrderStatus.NEW;
 
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     private Instant createdAt = Instant.now();
 
