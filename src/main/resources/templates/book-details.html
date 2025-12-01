@@ -35,37 +35,33 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#CC0033;">
     <div class="container">
-        <a class="navbar-brand" href="/shop">Online Bookstore</a>
-    </div>
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #CC0033;">
-  <div class="container">
-    <a class="navbar-brand" href="#">
-    <span th:if="${#authorization.expression('isAuthenticated()')}"
-          th:text="${#authentication.principal.displayName + '’s Online Bookstore'}">
-    </span>
+        <a class="navbar-brand" href="#">
+      <span th:if="${#authorization.expression('isAuthenticated()')}"
+            th:text="${#authentication.principal.displayName + '’s Online Bookstore'}">
+      </span>
 
-      <span th:if="${#authorization.expression('!isAuthenticated()')}">
+            <span th:if="${#authorization.expression('!isAuthenticated()')}">
         Online Bookstore
-    </span>
-    </a>
-    <div class="collapse navbar-collapse">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link active" th:href="@{/shop}">Shop</a></li>
-        <li class="nav-item"><a class="nav-link" th:href="@{/cart}">Cart</a></li>
-        <li class="nav-item" sec:authorize="!isAuthenticated()">
-          <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-          <a class="nav-link" th:href="@{/logout}">Sign Out</a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-          <a class="nav-link" th:href="@{/profile}">Profile</a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+      </span>
+        </a>
 
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link active" th:href="@{/shop}">Shop</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/cart}">Cart</a></li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/logout}">Sign Out</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/profile}">Profile</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 <div class="container mt-4">
 
     <!-- If book not found -->
@@ -82,13 +78,6 @@
         <p><strong>Category:</strong> <span th:text="${book.category}"></span></p>
         <p><strong>Price:</strong> $<span th:text="${book.price}"></span></p>
         <p><strong>Stock:</strong> <span th:text="${book.stock}"></span></p>
-
-        <!-- Add to Cart -->
-        <form th:action="@{'/cart/add/' + ${book.id}}" method="post">
-            <button type="submit" class="btn text-white border-0" style="background-color:#CC0033;">
-                Add to Cart
-            </button>
-        </form>
     <p class="mb-1"><strong>Author:</strong> <span th:text="${book.author}"></span></p>
     <p class="mb-1"><strong>Category:</strong> <span th:text="${book.category}"></span></p>
     <p class="mb-1"><strong>Price:</strong> $<span th:text="${book.price}"></span></p>

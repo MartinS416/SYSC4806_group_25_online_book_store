@@ -5,11 +5,52 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body class="container py-4">
+<body >
+<!-- ADMIN NAVBAR -->
+<nav class="navbar navbar-expand-lg" style="background-color: #CC0033;">
+    <div class="container-fluid">
 
+        <a class="navbar-brand text-white fw-bold" th:href="@{/admin}">
+            Admin Panel
+        </a>
+
+        <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="adminNavbar">
+
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/admin/dashboard}">Dashboard</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/admin/books}">Books</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/admin/customers}">Users</a>
+                </li>
+
+            </ul>
+
+            <!-- Logout / Profile -->
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/logout}">Logout</a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
 <h2 th:text="${customer.id == null} ? 'Add Customer' : 'Edit Customer'"></h2>
 
-<form th:action="@{/admin/customers}" th:object="${customer}" method="post" class="mt-3">
+<form th:action="@{/admin/customers}" th:object="${customer}"
+      method="post" class="mt-3 needs-validation" id="customerForm" novalidate>
 
     <input type="hidden" th:field="*{id}"/>
 
@@ -21,8 +62,9 @@
                    required
                    minlength="3"
                    maxlength="32"
-                   pattern="[A-Za-z0-9_]+"
-                   title="Username must be 3-32 characters using letters, numbers, or underscores.">
+                   pattern="^[A-Za-z0-9_]{3,32}$"
+                   title="3–32 characters. Letters, numbers, underscores only.">
+            <div class="invalid-feedback">Invalid username.</div>
         </div>
 
         <div class="col-md-6">
@@ -32,10 +74,12 @@
                    th:field="*{email}"
                    required
                    maxlength="100"
-                   title="Enter a valid email address.">
+                   pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+                   title="Enter a valid email address."
+                   id="emailInput"> <div class="invalid-feedback">Enter a valid email.</div>
+            <div id="emailDuplicateFeedback" style="display:none; color: red; font-size: 0.875em;"></div>
         </div>
     </div>
-
 
     <div class="row mb-3">
         <div class="col-md-6">
@@ -45,8 +89,9 @@
                    required
                    minlength="2"
                    maxlength="50"
-                   pattern="[A-Za-z\s\-']+"
-                   title="Name can only contain letters, spaces, hyphens, and apostrophes.">
+                   pattern="^[A-Za-zÀ-ÿ' -]{2,50}$"
+                   title="Letters, spaces, hyphens, apostrophes only.">
+            <div class="invalid-feedback">Enter a valid first name.</div>
         </div>
 
         <div class="col-md-6">
@@ -56,8 +101,9 @@
                    required
                    minlength="2"
                    maxlength="50"
-                   pattern="[A-Za-z\s\-']+"
-                   title="Name can only contain letters, spaces, hyphens, and apostrophes.">
+                   pattern="^[A-Za-zÀ-ÿ' -]{2,50}$"
+                   title="Letters, spaces, hyphens, apostrophes only.">
+            <div class="invalid-feedback">Enter a valid last name.</div>
         </div>
     </div>
 
@@ -70,8 +116,9 @@
                    required
                    minlength="10"
                    maxlength="15"
-                   pattern="[0-9]+"
-                   title="Phone must contain only numbers and be 10–15 digits.">
+                   pattern="^[0-9]{10,15}$"
+                   title="Phone number must be 10–15 digits. Numbers only.">
+            <div class="invalid-feedback">Enter a valid phone number (10–15 digits).</div>
         </div>
 
         <div class="col-md-6">
@@ -81,6 +128,7 @@
                 <option value="USER">USER</option>
                 <option value="ADMIN">ADMIN</option>
             </select>
+            <div class="invalid-feedback">Select a role.</div>
         </div>
     </div>
 
@@ -92,13 +140,105 @@
                required
                minlength="6"
                maxlength="64"
-               title="Password must be at least 6 characters.">
+               pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-={}|:<>?]{6,64}$"
+               title="Password must be 6+ characters and contain letters and numbers.">
+        <div class="invalid-feedback">
+            Password must be at least 6 characters and contain letters and numbers.
+        </div>
     </div>
 
-    <button class="btn btn-primary">Save</button>
+    <button class="btn btn-primary" id="saveButton" disabled>Save</button>
     <a class="btn btn-secondary" th:href="@{/admin/customers}">Cancel</a>
-
 </form>
+
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('customerForm');
+        const saveButton = document.getElementById('saveButton');
+        const emailInput = document.getElementById('emailInput');
+        const emailDuplicateFeedback = document.getElementById('emailDuplicateFeedback');
+
+        // Get the current customer ID (null if creating a new user)
+        const currentCustomerId = /*[[${customer.id}]]*/ null;
+
+        // Function to check validity and toggle the button (existing function)
+        function checkFormValidity() {
+            const isValid = form.checkValidity();
+            const isDuplicate = emailDuplicateFeedback.style.display !== 'none';
+
+            // The button is disabled if the form is NOT valid OR if the email is a confirmed duplicate
+            saveButton.disabled = !isValid || isDuplicate;
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+            } else {
+                form.classList.remove('was-validated');
+            }
+        }
+
+       function checkEmailDuplicate() {
+            // Only proceed if the email is valid based on HTML attributes
+            if (!emailInput.checkValidity()) {
+                // Clear any previous duplicate warning
+                emailDuplicateFeedback.style.display = 'none';
+                checkFormValidity();
+                return;
+            }
+
+            const emailValue = emailInput.value;
+
+            // Define the endpoint on your server
+            const url = '/admin/customers/check_email';
+
+            fetch(url, {
+                method: 'POST', // Use POST to send data securely
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: emailValue, id: currentCustomerId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 'data' should contain a boolean property, e.g., 'isDuplicate'
+                const isDuplicate = data.isDuplicate;
+
+                if (isDuplicate) {
+                    emailDuplicateFeedback.textContent = 'This email is already in use.';
+                    emailDuplicateFeedback.style.display = 'block';
+                    emailInput.setCustomValidity("Duplicate"); // Prevents form submission
+                } else {
+                    emailDuplicateFeedback.style.display = 'none';
+                    emailInput.setCustomValidity(""); // Allows form submission
+                }
+
+                // Re-check form validity to update the button state
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error('Error during email check:', error);
+                // Optionally, disable the button on error to prevent submission
+                // or handle the error gracefully.
+            });
+        }
+
+        // Add event listeners to all form controls (existing logic)
+        const formControls = form.querySelectorAll('input, select');
+        formControls.forEach(control => {
+            control.addEventListener('input', checkFormValidity);
+            control.addEventListener('change', checkFormValidity);
+            control.addEventListener('keyup', checkFormValidity);
+        });
+
+        let debounceTimer;
+        emailInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(checkEmailDuplicate, 500); // Wait 500ms after typing stops
+        });
+
+         checkFormValidity();
+    });
+</script>
 
 </body>
 </html>

@@ -1,13 +1,17 @@
 package com.bookstore.common.controller;
 
+import com.bookstore.common.dto.OrderLineDto;
 import com.bookstore.common.model.Customer;
 import com.bookstore.common.repository.CustomerRepository;
+import com.bookstore.pos.model.Order;
+import com.bookstore.pos.repository.OrderRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/profile")
@@ -15,11 +19,14 @@ public class ProfileController {
 
     private final CustomerRepository customerRepo;
     private final PasswordEncoder passwordEncoder;
+    private final OrderRepository orderRepository;
 
     public ProfileController(CustomerRepository customerRepo,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder,
+                             OrderRepository orderRepository) {
         this.customerRepo = customerRepo;
         this.passwordEncoder = passwordEncoder;
+        this.orderRepository = orderRepository;
     }
 
     /**
@@ -34,8 +41,12 @@ public class ProfileController {
         Customer customer = getLoggedInCustomer(principal);
         model.addAttribute("customer", customer);
 
+        List<Order> orders = orderRepository.findAllByCustomerIdOrderByCreatedAtDesc(customer.getId());
+        model.addAttribute("orders", orders);
+
         return "profile";
     }
+
 
     /**
      * updates customer information
@@ -122,6 +133,30 @@ public class ProfileController {
     private Customer getLoggedInCustomer(Principal principal) {
         return customerRepo.findByEmail(principal.getName())
                 .orElseThrow(() -> new IllegalStateException("Logged-in user not found!"));
+    }
+
+    @GetMapping("/orders/{id}/items")
+    @ResponseBody
+    public List<OrderLineDto> getCustomerOrderItems(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        // Load order
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Order not found"));
+
+        if (!order.getEmail().equals(principal.getName())) {
+            throw new IllegalStateException("Unauthorized access to this order");
+        }
+
+        return order.getOrderLines().stream()
+                .map(ol -> new OrderLineDto(
+                        ol.getBook().getTitle(),
+                        ol.getQuantity(),
+                        ol.getPrice(),
+                        ol.getSubtotal()
+                ))
+                .toList();
     }
 
 }

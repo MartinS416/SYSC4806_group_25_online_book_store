@@ -1,9 +1,16 @@
 package com.bookstore.inventory.controller;
 
+import com.bookstore.common.dto.OrderLineDto;
+import com.bookstore.pos.model.Order;
+import com.bookstore.pos.model.OrderLine;
 import com.bookstore.pos.service.OrderService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @Controller
 public class AdminDashboardController {
@@ -25,4 +32,11 @@ public class AdminDashboardController {
 
         return "admin/dashboard"; // loads templates/admin/dashboard.html
     }
+
+    @GetMapping("/admin/orders/{id}/items")
+    @ResponseBody
+    public List<OrderLineDto> getOrderItems(@PathVariable Long id) {
+        return orderService.getOrderLineDTOs(id);
+    }
+
 }

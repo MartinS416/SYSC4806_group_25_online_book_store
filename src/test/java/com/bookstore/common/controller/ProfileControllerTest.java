@@ -2,6 +2,7 @@ package com.bookstore.common.controller;
 
 import com.bookstore.common.model.Customer;
 import com.bookstore.common.repository.CustomerRepository;
+import com.bookstore.pos.repository.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,9 @@ class ProfileControllerTest {
 
     @Mock
     private CustomerRepository customerRepo;
+
+    @Mock
+    private OrderRepository orderRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;

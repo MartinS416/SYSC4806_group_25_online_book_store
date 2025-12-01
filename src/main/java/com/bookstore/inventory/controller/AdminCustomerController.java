@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/customers")
@@ -85,5 +87,39 @@ public class AdminCustomerController {
     public String delete(@PathVariable Long id) {
         repo.deleteById(id);
         return "redirect:/admin/customers";
+    }
+
+    /**
+     * Handles the AJAX request to check for duplicate emails.
+     * The request body should contain the email and the customer ID (for edit mode).
+     * @param payload A Map containing "email" and "id" (id may be null for new customer).
+     * @return A Map containing the key "isDuplicate" with a boolean value.
+     */
+    @PostMapping("/check_email")
+    @ResponseBody // Tells Spring to return the data directly (JSON) instead of a view name
+    public Map<String, Boolean> checkDuplicateEmail(@RequestBody Map<String, Object> payload) {
+        String email = (String) payload.get("email");
+        // ID comes in as a Long, Integer, or null depending on how Thymeleaf renders it.
+        // We'll safely cast it, treating null as 0 for comparison if needed.
+        Number idNumber = (Number) payload.get("id");
+        Long customerId = (idNumber != null) ? idNumber.longValue() : 0L;
+
+        // 1. Find a customer in the database by the provided email
+        Optional<Customer> foundCustomer = repo.findByEmail(email);
+
+        boolean isDuplicate;
+
+        if (foundCustomer.isEmpty()) {
+            // Email not found at all -> not a duplicate
+            isDuplicate = false;
+        } else {
+            // Email is found. Check if it belongs to the customer we are currently editing.
+            // If the found customer's ID matches the current customerId (editing their own email), it's OK.
+            // If the IDs don't match, or if customerId is 0 (new user), it's a duplicate.
+            isDuplicate = !foundCustomer.get().getId().equals(customerId);
+        }
+
+        // Return a JSON object like: {"isDuplicate": true} or {"isDuplicate": false}
+        return Map.of("isDuplicate", isDuplicate);
     }
 }
