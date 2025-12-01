@@ -7,36 +7,36 @@ A simple online store that allows individuals to purchase books from a bookstore
 ![Java](https://img.shields.io/badge/java-21-orange)  
 ![Spring Boot](https://img.shields.io/badge/spring--boot-3.3-green)
 
-**Author(s)**: [@fareenlavji](https://github.com/fareenlavji), [@MartinS416](https://github.com/MartinS416), [@JamesTucker](https://github.com/shapidobob).
+_`README.md` Author(s)_: [@fareenlavji](https://github.com/fareenlavji), [@MartinS416](https://github.com/MartinS416), [@JamesTucker](https://github.com/shapidobob).
 
 ---
 
 # ✅ Table of Contents  
-1. [Description](#1-description)   
-2. [Features](#2-features)   
-3. [Architecture & Schema](#3-architecture--schema)   
-   3.1. [System Architecture (Package-Based MVC)](#31-system-architecture-package-based-mvc)   
-   3.2. [Database Schema (ER Diagram)](#32-database-schema-er-diagram)   
-   3.3. [Component Interaction Diagram (High-Level)](#33-component-interaction-diagram-high-level)   
-   3.4. [Test Architecture](#34-test-architecture)   
-4. [Tech Stack](#4-tech-stack)   
-5. [Getting Started](#5-getting-started)   
-   5.1. [Prerequisites](#51-prerequisites)   
-   5.2. [Installation](#52-installation)   
-   5.3. [Running the Application](#53-running-the-application)   
-6. [Database Setup](#6-database-setup)   
-   6.1. [Development (H2 In-Memory)](#61-development-h2-in-memory)   
-   6.2. [Production (MySQL or Azure SQL)](#62-production-mysql-or-azure-sql)   
-7. [Usage](#7-usage)   
-   7.1. [Books](#71-books)   
-   7.2. [Cart & Orders](#72-cart--orders)   
-   7.3. [Admin](#73-admin)   
-8. [API Endpoints](#8-api-endpoints)   
-9. [Project Structure](#9-project-structure)   
-   9.1. [Test Coverage](#91-test-coverage)   
-   9.2. [Running Tests](#92-running-tests)   
-   9.3. [Key Testing Documents](#93-key-testing-documents)   
-10. [Contributions by Milestone](#10-contributions-by-milestone)   
+1. [Description](#description)
+2. [Features](#features)  
+3. [Architecture & Schema](#architecture--schema)  
+   3.1. [System Architecture (Package-Based MVC)](#31-system-architecture-package-based-mvc)  
+   3.2. [Database Schema (ER Diagram)](#32-database-schema-er-diagram)  
+   3.3. [Component Interaction Diagram (High-Level)](#33-component-interaction-diagram-high-level)  
+   3.4. [Test Architecture](#34-test-architecture)  
+4. [Tech Stack](#tech-stack)  
+5. [Getting Started](#getting-started)  
+   5.1. [Prerequisites](#51-prerequisites)  
+   5.2. [Installation](#52-installation)  
+   5.3. [Running the Application](#53-running-the-application)  
+6. [Database Setup](#database-setup)  
+   6.1. [Development (H2 In-Memory)](#61-development-h2-in-memory)  
+   6.2. [Production (MySQL or Azure SQL)](#62-production-mysql-or-azure-sql)  
+7. [Usage](#usage)  
+   7.1. [Books](#71-books)  
+   7.2. [Cart & Orders](#72-cart--orders)  
+   7.3. [Admin](#73-admin)  
+8. [API Endpoints](#api-endpoints)  
+9. [Project Structure](#project-structure)  
+   9.1. [Test Coverage](#91-test-coverage)  
+   9.2. [Running Tests](#92-running-tests)  
+   9.3. [Key Testing Documents](#93-key-testing-documents)  
+10. [Contributions by Milestone](#contributions-by-milestone)  
 
 ---
 
@@ -467,12 +467,12 @@ mvn test -Dtest="com.bookstore.pos.**Test"
 ## 10. 📌 Contribution Summary by Milestone
 
 | User | Milestone 01 | Milestone 02 | Milestone 03 |
-|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| [@fareenlavji](https://github.com/fareenlavji) | Programmed entities (models), and repositories. | 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Refined architecture into business domain silos of MVCs and their associated test suites, categorized into unit, integration, and system tests.<br>3. Fixed bugs for Order `totalAmount` calculations and persistence along with othe minor issues.<br>4. Updated repo wikis. | 
+|------|--------------|--------------|--------------|
+| [@fareenlavji](https://github.com/fareenlavji) | 1. Integrated and refined initial ER schema.<br>2. Programmed entities (models), and repositories. | 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Refined architecture into business domain silos of MVCs and their associated test suites, categorized into unit, integration, and system tests.<br>3. Fixed bugs for Order `totalAmount` calculations and persistence along with othe minor fixes and git merge fixes.<br>4. Updated repo wikis. | 
 | [@martins416](https://github.com/martins416)   | 1. Implemented basic payment processing.<br>2. Implemented website styling and layout.<br>3. Set up Azure hosting and CI/CD pipeline. | 1. Implemented login authentication system.<br>2. Created and configured the database schema.<br>3. Additional backend setup tasks. | 1. Implemented full admin pages and management tools.<br>2. Fixed UI-related bugs across the site.<br>3. Improved overall interface stability. |
 | [@JamesTucker](https://github.com/shapidobob)  | 1. Added error handling to checkout.<br>2. Created first itteration of Readme.<br>3. Bug fixes, Edits, and PR reviews. | 1. Credit card validation.<br>2. Checkout logic.<br>3. Fixed Bugs in card. | 1. Ensured removal of purchaced books.<br>2. Added inactive cart system.<br>3. Added more error handling and purchace success screen to cart. |
 | [@YousifMuziel](https://github.com/YousifMuziel) | 1. Implemented the Shopping Cart feature, including add/remove item logic and quantity updates.<br>2. Developed the Cart Page UI and integrated it with backend services.<br>3. Created the initial suite of unit tests for cart operations and ensured core functionality stability. | 1. Added full filter functionality to the Shop page (category, price range, and stock availability).<br>2. Implemented backend filtering logic and updated controllers/services accordingly.<br>3. Resolved UI/UX issues on the Shop and Cart pages to improve user flow and consistency. | 1. Developed the book recommendation system and integrated it with the Shop page.<br>2. Improved filter performance and refined query handling to prevent logical issues (e.g., min/max edge cases).<br>3. Assisted with final debugging, polishing interfaces, and ensuring smooth milestone delivery. |
-| [@Yuvi-Pain](https://github.com/Yuvi-Pain) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| [@Yuvi-Pain](https://github.com/Yuvi-Pain) | Create page to view Books. | Create search functionality to see books while customers perform search queries. | 1. Implemented Reviews UI on Book-Details page.<br>2. UI improvements. |
 
 <!--
 ---
