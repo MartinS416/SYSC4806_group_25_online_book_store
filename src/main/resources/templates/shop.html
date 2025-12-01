@@ -1,358 +1,267 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<style>
-    /* Pagination matching your theme */
-
-    .pagination .page-link {
-        color: #CC0033;                /* Red text */
-        border-color: #CC0033;         /* Red border */
-    }
-
-    .pagination .page-link:hover {
-        background-color: #CC0033;     /* Red on hover */
-        color: white;                  /* White text on hover */
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: #CC0033;     /* Active page */
-        color: white;
-        border-color: #CC0033;
-    }
-
-    .pagination .page-item.disabled .page-link {
-        color: #999;                   /* Disabled next/prev */
-        border-color: #ccc;
-    }
-</style>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head>
     <meta charset="UTF-8">
     <title>Book Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        .pagination .page-link {
+            color: #CC0033;
+            border-color: #CC0033;
+        }
+        .pagination .page-link:hover {
+            background-color: #CC0033;
+            color: white;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #CC0033;
+            color: white;
+            border-color: #CC0033;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #999;
+            border-color: #ccc;
+        }
         .popup-container {
-          position: fixed; /* Fixes the popup relative to the viewport */
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
-          display: flex; /* Enables Flexbox for centering */
-          justify-content: center; /* Horizontally centers the content */
-          align-items: center; /* Vertically centers the content */
-          z-index: 1000; /* Ensures the popup is on top of other content */
-          /* Initially hide the popup and show it with JavaScript */
-          visibility: visible;
-          opacity: 1;
-          transition: visibility 0s, opacity 0.3s ease-in-out;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease-in-out;
         }
-
         .popup-container.show {
-          visibility: visible;
-          opacity: 1;
+            visibility: visible;
+            opacity: 1;
         }
-
         .popup-content {
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-          max-width: 500px; /* Optional: limit popup width */
-          text-align: center; /* Optional: center text within popup */
-          background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            text-align: center;
+            background-color: white;
+        }
+        button:disabled,
+        button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #ccc !important;
         }
     </style>
 </head>
-
 <body class="bg-light">
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#CC0033;">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <span th:if="${#authorization.expression('isAuthenticated()')}"
-                  th:text="${#authentication.principal.displayName + '’s Online Bookstore'}"></span>
-
-            <span th:if="${#authorization.expression('!isAuthenticated()')}">
-                Online Bookstore
-            </span>
-        </a>
-
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" th:href="@{/shop}">Shop</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/cart}">Cart</a></li>
-
-                <li class="nav-item" sec:authorize="!isAuthenticated()">
-                    <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
-                </li>
-
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" th:href="@{/logout}">Sign Out</a>
-                </li>
-
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" th:href="@{/profile}">Profile</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-<div class="popup-container" id="successNotice">
-    <div class="popup-content">
-        <h1>Success</h1>
-        <p>your purchase was successful</p>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
-    </div>
-</div>
-<script>
-    function openForm() {
-        document.getElementById("successNotice").style.display = "flex";
-    }
-
-    function closeForm() {
-        document.getElementById("successNotice").style.display = "none";
-    }
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    if(urlParams.get('paid')=="true"){
-        openForm();
-    } else {
-        closeForm();
-    }
-</script>
-
-<div class="container mt-4">
-    <div class="row">
-
-        <!-- Filters -->
-        <div class="col-md-3 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Filters</h5>
-
-                    <form th:action="@{/shop}" method="get">
-
-                        <!-- Search -->
-                        <div class="mb-3">
-                            <label class="form-label" for="keyword">Search</label>
-                            <input id="keyword" name="keyword" class="form-control"
-                                   th:value="${keyword}" placeholder="Search books..."/>
-                        </div>
-
-                        <!-- Category -->
-                        <div class="mb-3">
-                            <label class="form-label" for="category">Category</label>
-                            <select id="category" name="category" class="form-select">
-                                <option th:value="${''}"
-                                        th:selected="${selectedCategory == null || selectedCategory == ''}">
-                                    All categories
-                                </option>
-                                <option th:each="cat : ${categories}"
-                                        th:value="${cat}"
-                                        th:text="${cat}"
-                                        th:selected="${selectedCategory != null and selectedCategory.equals(cat)}">
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="mb-3">
-                            <label class="form-label">Price range</label>
-                            <div class="d-flex gap-2">
-                                <input class="form-control" type="number" name="minPrice" step="0.01"
-                                       placeholder="Min" th:value="${minPrice}"/>
-                                <input class="form-control" type="number" name="maxPrice" step="0.01"
-                                       placeholder="Max" th:value="${maxPrice}"/>
-                            </div>
-                        </div>
-
-                        <!-- In stock -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" name="inStock" id="inStock"
-                                   th:checked="${inStock}">
-                            <label class="form-check-label" for="inStock">In stock only</label>
-                        </div>
-
-                        <button class="btn text-white w-100" style="background:#CC0033;" type="submit">
-                            Apply filters
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Books -->
-        <div class="col-md-9">
-
-            <h2 class="mb-3">Available Books</h2>
-
-            <p th:if="${#lists.isEmpty(books)}" class="text-muted">
-                No books match your search and filters.
-            </p>
-
-            <div th:if="${!#lists.isEmpty(books)}" class="row">
-                <div th:each="b : ${books}" class="col-md-4 mb-3">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-
-                            <h5 class="card-title" th:text="${b.title}"></h5>
-
-                            <p class="card-text">
-                                <strong>Author:</strong> <span th:text="${b.author}"></span><br/>
-                                <strong>Price:</strong> $<span th:text="${b.price}"></span><br/>
-                                <strong>Category:</strong> <span th:text="${b.category}"></span><br/>
-                                <strong>Stock:</strong>
-                                <span class="stock-count" th:attr="data-id=${b.id}" th:text="${b.stock}"></span>
-                            </p>
-
-                            <a th:href="@{'/books/' + ${b.id}}"
-                               class="btn btn-outline-dark w-100 mb-2">View Details</a>
-
-                            <button class="btn text-white w-100 add-to-cart-btn"
-                                    style="background:#CC0033;"
-                                    th:data-id="${b.id}">
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Pagination -->
-            <nav th:if="${totalPages > 1}" class="mt-4">
-                <ul class="pagination justify-content-center">
-
-                    <!-- Previous -->
-                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/shop(
-                               page=${currentPage - 1},
-                               keyword=${keyword},
-                               category=${selectedCategory},
-                               minPrice=${minPrice},
-                               maxPrice=${maxPrice},
-                               inStock=${inStock}
-                           )}">
-                            Previous
-                        </a>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #CC0033">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <span th:if="!#authorization.expression('isAuthenticated()')">Online Bookstore</span>
+                <span th:if="#authorization.expression('isAuthenticated()')" th:text="${#authentication.principal.displayName} + '''s Online Bookstore'"></span>
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" th:href="@{/shop}">Shop</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/cart}">Cart</a></li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
                     </li>
-
-                    <!-- Page numbers -->
-                    <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:classappend="${i == currentPage} ? 'active'"
-                        class="page-item">
-
-                        <a class="page-link"
-                           th:text="${i + 1}"
-                           th:href="@{/shop(
-                               page=${i},
-                               keyword=${keyword},
-                               category=${selectedCategory},
-                               minPrice=${minPrice},
-                               maxPrice=${maxPrice},
-                               inStock=${inStock}
-                           )}">
-                        </a>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/logout}">Sign Out</a>
                     </li>
-
-                    <!-- Next -->
-                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/shop(
-                               page=${currentPage + 1},
-                               keyword=${keyword},
-                               category=${selectedCategory},
-                               minPrice=${minPrice},
-                               maxPrice=${maxPrice},
-                               inStock=${inStock}
-                           )}">
-                            Next
-                        </a>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/profile}">Profile</a>
                     </li>
                 </ul>
-            </nav>
+            </div>
+        </div>
+    </nav>
 
+    <div class="popup-container" id="successNotice">
+        <div class="popup-content">
+            <h1>Success</h1>
+            <p>your purchase was successful</p>
+            <button type="button" class="btn btn-primary" onclick="closeForm()">Close</button>
+        </div>
+    </div>
 
-            <!-- Recommendations -->
-            <div class="mt-5">
-                <h3 th:if="${!#lists.isEmpty(recommendedBooks)}">Recommended for you</h3>
+    <script>
+        function openForm() {
+            document.getElementById("successNotice").style.display = "flex";
+        }
+        function closeForm() {
+            document.getElementById("successNotice").style.display = "none";
+        }
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        if (urlParams.get("paid") === "true") {
+            openForm();
+        } else {
+            closeForm();
+        }
+    </script>
 
-                <p th:if="${#lists.isEmpty(recommendedBooks)}" class="text-muted">
-                    <span sec:authorize="!isAuthenticated()">Sign in to see recommendations.</span>
-                    <span sec:authorize="isAuthenticated()">Buy a few books to get recommendations.</span>
-                </p>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Filters -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Filters</h5>
+                        <form th:action="@{/shop}" method="get">
+                            <!-- Search -->
+                            <div class="mb-3">
+                                <label class="form-label" for="keyword">Search</label>
+                                <input id="keyword" name="keyword" class="form-control" th:value="${keyword}" placeholder="Search books...">
+                            </div>
 
-                <div th:if="${!#lists.isEmpty(recommendedBooks)}" class="row mt-3">
-                    <div th:each="b : ${recommendedBooks}" class="col-md-4 mb-3">
+                            <!-- Category -->
+                            <div class="mb-3">
+                                <label class="form-label" for="category">Category</label>
+                                <select id="category" name="category" class="form-select">
+                                    <option th:value="" th:selected="${selectedCategory == null}">All categories</option>
+                                    <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}" th:selected="${selectedCategory != null and selectedCategory.equals(cat)}"></option>
+                                </select>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="mb-3">
+                                <label class="form-label">Price range</label>
+                                <div class="d-flex gap-2">
+                                    <input class="form-control" type="number" name="minPrice" step="0.01" placeholder="Min" th:value="${minPrice}">
+                                    <input class="form-control" type="number" name="maxPrice" step="0.01" placeholder="Max" th:value="${maxPrice}">
+                                </div>
+                            </div>
+
+                            <!-- In stock -->
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="inStock" id="inStock" th:checked="${inStock}">
+                                <label class="form-check-label" for="inStock">In stock only</label>
+                            </div>
+
+                            <button class="btn text-white w-100" style="background: #CC0033" type="submit">Apply filters</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books -->
+            <div class="col-md-9">
+                <h2 class="mb-3">Available Books</h2>
+                <p th:if="${#lists.isEmpty(books)}" class="text-muted">No books match your search and filters.</p>
+
+                <div th:if="!${#lists.isEmpty(books)}" class="row">
+                    <div th:each="b : ${books}" class="col-md-4 mb-3">
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
-
                                 <h5 class="card-title" th:text="${b.title}"></h5>
-
                                 <p class="card-text">
-                                    <strong>Author:</strong> <span th:text="${b.author}"></span><br/>
-                                    <strong>Price:</strong> $<span th:text="${b.price}"></span><br/>
-                                    <strong>Category:</strong> <span th:text="${b.category}"></span>
+                                    <strong>Author</strong><span th:text="${b.author}"></span><br>
+                                    <strong>Price</strong><span th:text="${b.price}"></span><br>
+                                    <strong>Category</strong><span th:text="${b.category}"></span><br>
+                                    <strong>Stock</strong><span class="stock-count" th:attr="data-id=${b.id}" th:text="${b.stock}"></span>
                                 </p>
-
-                                <a th:href="@{'/books/' + ${b.id}}"
-                                   class="btn btn-outline-dark w-100 mb-2">
-                                    View Details
-                                </a>
-
-                                <button class="btn text-white w-100 add-to-cart-btn"
-                                        style="background:#28a745;"
-                                        th:data-id="${b.id}">
+                                <a th:href="@{/books/{id}(id=${b.id})}" class="btn btn-outline-dark w-100 mb-2">View Details</a>
+                                <button class="btn text-white w-100 add-to-cart-btn" 
+                                        style="background-color: #CC0033" 
+                                        th:data-id="${b.id}"
+                                        th:disabled="${b.stock == 0}"
+                                        th:classappend="${b.stock == 0} ? 'disabled' : ''">
                                     Add to Cart
                                 </button>
-
                             </div>
                         </div>
                     </div>
-
                 </div>
 
-            </div>
+                <!-- Pagination -->
+                <nav th:if="${totalPages > 1}" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous -->
+                        <li class="page-item" th:class="${currentPage == 0} ? 'page-item disabled'">
+                            <a class="page-link" th:href="@{/shop(page=${currentPage - 1}, keyword=${keyword}, category=${selectedCategory}, minPrice=${minPrice}, maxPrice=${maxPrice}, inStock=${inStock})}">Previous</a>
+                        </li>
 
+                        <!-- Page numbers -->
+                        <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:class="${i == currentPage} ? 'page-item active'" class="page-item">
+                            <a class="page-link" th:text="${i + 1}" th:href="@{/shop(page=${i}, keyword=${keyword}, category=${selectedCategory}, minPrice=${minPrice}, maxPrice=${maxPrice}, inStock=${inStock})}"></a>
+                        </li>
+
+                        <!-- Next -->
+                        <li class="page-item" th:class="${currentPage + 1 >= totalPages} ? 'page-item disabled'">
+                            <a class="page-link" th:href="@{/shop(page=${currentPage + 1}, keyword=${keyword}, category=${selectedCategory}, minPrice=${minPrice}, maxPrice=${maxPrice}, inStock=${inStock})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Recommendations -->
+                <div class="mt-5">
+                    <h3 th:if="!${#lists.isEmpty(recommendedBooks)}">Recommended for you</h3>
+                    <p th:if="${#lists.isEmpty(recommendedBooks)}" class="text-muted">
+                        <span sec:authorize="!isAuthenticated()">Sign in to see recommendations.</span>
+                        <span sec:authorize="isAuthenticated()">Buy a few books to get recommendations.</span>
+                    </p>
+
+                    <div th:if="!${#lists.isEmpty(recommendedBooks)}" class="row mt-3">
+                        <div th:each="b : ${recommendedBooks}" class="col-md-4 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title" th:text="${b.title}"></h5>
+                                    <p class="card-text">
+                                        <strong>Author</strong><span th:text="${b.author}"></span><br>
+                                        <strong>Price</strong><span th:text="${b.price}"></span><br>
+                                        <strong>Category</strong><span th:text="${b.category}"></span>
+                                    </p>
+                                    <a th:href="@{/books/{id}(id=${b.id})}" class="btn btn-outline-dark w-100 mb-2">View Details</a>
+                                    <button class="btn text-white w-100 add-to-cart-btn" 
+                                            style="background-color: #28a745" 
+                                            th:data-id="${b.id}"
+                                            th:disabled="${b.stock == 0}"
+                                            th:classappend="${b.stock == 0} ? 'disabled' : ''">
+                                        Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-
-                const id = btn.dataset.id;
-
-                const response = await fetch(`/cart/add-ajax/${id}`, {
-                    method: "POST",
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
+                btn.addEventListener("click", async function() {
+                    const id = btn.dataset.id;
+                    const response = await fetch(`/cart/add-ajax/${id}`, {
+                        method: "POST",
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    });
+                    const data = await response.json();
+                    if (data.newStock !== undefined) {
+                        const stockSpan = document.querySelector(`.stock-count[data-id="${id}"]`);
+                        if (stockSpan) {
+                            stockSpan.textContent = data.newStock;
+                        }
+                        btn.textContent = "Added!";
+                        btn.style.backgroundColor = "#28a745";
+                        setTimeout(() => {
+                            btn.textContent = "Add to Cart";
+                            btn.style.backgroundColor = "#CC0033";
+                        }, 900);
+                    }
                 });
-
-                const data = await response.json();
-
-                if (data.newStock !== undefined) {
-                    const stockSpan = document.querySelector(`.stock-count[data-id='${id}']`);
-                    if (stockSpan) stockSpan.textContent = data.newStock;
-                }
-
-                btn.textContent = "Added!";
-                btn.style.backgroundColor = "#28a745";
-
-                setTimeout(() => {
-                    btn.textContent = "Add to Cart";
-                    btn.style.backgroundColor = "#CC0033";
-                }, 900);
             });
         });
-    });
-</script>
+    </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
