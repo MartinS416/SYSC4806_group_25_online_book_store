@@ -1,5 +1,9 @@
 package com.bookstore.pos.repository;
 
+import com.bookstore.demo.model.Address;
+import com.bookstore.demo.model.Customer;
+import com.bookstore.demo.repository.AddressRepository;
+import com.bookstore.demo.repository.CustomerRepository;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderStatus;
 import org.junit.jupiter.api.Test;
@@ -25,6 +29,12 @@ class OrderRepositoryIT {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
     /**
      * Verifies that orders are saved and can be listed in descending creation order.
      */
@@ -39,6 +49,25 @@ class OrderRepositoryIT {
         newer.setStatus(OrderStatus.NEW);
         newer.setTotalAmount(new BigDecimal("20.00"));
         newer.setCreatedAt(Instant.now());
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        newer.setAddress(address);
+        newer.setCustomer(customer);
+        older.setAddress(address);
+        older.setCustomer(customer);
 
         orderRepository.save(older);
         orderRepository.save(newer);
@@ -57,6 +86,24 @@ class OrderRepositoryIT {
         Order order = new Order();
         order.setStatus(OrderStatus.NEW);
         order.setTotalAmount(new BigDecimal("15.00"));
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        order.setAddress(address);
+        order.setCustomer(customer);
+
         orderRepository.save(order);
 
         List<?> rows = orderRepository.getDailyRevenue();
@@ -72,6 +119,24 @@ class OrderRepositoryIT {
         Order order = new Order();
         order.setStatus(OrderStatus.NEW);
         order.setTotalAmount(new BigDecimal("5.00"));
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        order.setAddress(address);
+        order.setCustomer(customer);
+
         orderRepository.save(order);
 
         List<?> rows = orderRepository.getOrdersPerDay();

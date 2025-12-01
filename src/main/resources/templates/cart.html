@@ -51,8 +51,8 @@
         </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/cart">Cart</a></li>
+                <li class="nav-item"><a class="nav-link " th:href="@{/shop}">Shop</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{/cart}">Cart</a></li>
                 <li class="nav-item" sec:authorize="!isAuthenticated()">
                     <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
                 </li>
@@ -60,34 +60,56 @@
                     <a class="nav-link" th:href="@{/logout}">Sign Out</a>
                 </li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" th:href="@{/logout}">Sign Out</a>
+                    <a class="nav-link" th:href="@{/profile}">Profile</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
-<div class="popup-container" id="myForm">
+<div class="popup-container" id="emptyForm">
     <div class="popup-content">
         <h1>Error</h1>
-        <p>payment could not be processed</p>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        <p>payment could not be processed:</p>
+        <p>cart is empty<p>
+        <button type="button" class="btn cancel" onclick="closeEForm()">Close</button>
+    </div>
+</div>
+<div class="popup-container" id="cardForm">
+    <div class="popup-content">
+        <h1>Error</h1>
+        <p>payment could not be processed:</p>
+        <p>card information is invalid or expired<p>
+        <button type="button" class="btn cancel" onclick="closeCForm()">Close</button>
     </div>
 </div>
 <script>
-    function openForm() {
-        document.getElementById("myForm").style.display = "flex";
+    function openEForm() {
+        document.getElementById("emptyForm").style.display = "flex";
     }
 
-    function closeForm() {
-        document.getElementById("myForm").style.display = "none";
+    function closeEForm() {
+        document.getElementById("emptyForm").style.display = "none";
+    }
+
+    function openCForm() {
+        document.getElementById("cardForm").style.display = "flex";
+    }
+
+    function closeCForm() {
+        document.getElementById("cardForm").style.display = "none";
     }
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    if(urlParams.get('paid')=="false"){
-        openForm();
+    if(urlParams.get('result')=="1"){
+        openCForm();
+        closeEForm();
+    } else if(urlParams.get('result')=="2"){
+        openEForm();
+        closeCForm();
     } else {
-        closeForm();
+        closeEForm();
+        closeCForm();
     }
 </script>
 <div style="display: flex; align-items: flex-start; justify-content: center; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
@@ -181,7 +203,9 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="postal" class="form-label">Postal code</label>
-                    <input type="text" class="form-control" id="postal" name="postal" placeholder="A1A 1A1" required>
+                    <input type="text" class="form-control" id="postal" name="postal" placeholder="A1A 1A1"
+                           pattern="(^[A-Z][0-9][A-Z][\s\-]?[0-9][A-Z][0-9]$)|(^[0-9\s]{5}$)|(^[0-9]{5}[\s\-]?[0-9]{4}$)"
+                           required>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="country" class="form-label">Country</label>

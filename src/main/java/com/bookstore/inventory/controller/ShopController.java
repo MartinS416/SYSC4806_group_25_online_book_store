@@ -26,6 +26,8 @@ public class ShopController {
     private final OrderRepository orderRepository;
     private final OrderLineRepository orderLineRepository;
 
+    private static final int PAGE_SIZE = 12;
+
     public ShopController(BookRepository br,
                           CustomerRepository customerRepository,
                           OrderRepository orderRepository,
@@ -43,17 +45,20 @@ public class ShopController {
                                @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
                                @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice,
                                @RequestParam(value = "inStock", required = false) Boolean inStock,
+                               @RequestParam(value = "page", defaultValue = "0") int page,
                                Model model,
                                Principal principal) {
 
-        // --- Fix for reversed price range (min > max) ---
+        // Fix reversed price values
         if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
             BigDecimal temp = minPrice;
             minPrice = maxPrice;
             maxPrice = temp;
         }
 
-        // --- Base book list: keyword search or all books ---
+        // -----------------------------------
+        // STEP 1 — load all books (or search)
+        // -----------------------------------
         List<Book> books;
         if (keyword != null && !keyword.trim().isEmpty()) {
             books = br.searchBooks(keyword.trim());
@@ -61,42 +66,57 @@ public class ShopController {
             books = br.findAll();
         }
 
-        // --- Category filter ---
+        // -----------------------------------
+        // STEP 2 — apply filters in memory
+        // -----------------------------------
         if (category != null && !category.isBlank()) {
             String selected = category.trim();
             books = books.stream()
-                    .filter(b -> b.getCategory() != null &&
-                            b.getCategory().equalsIgnoreCase(selected))
+                    .filter(b -> selected.equalsIgnoreCase(b.getCategory()))
                     .collect(Collectors.toList());
         }
 
-        // --- Min price filter ---
         if (minPrice != null) {
-            BigDecimal min = minPrice;
+            final BigDecimal fMinPrice = minPrice;
             books = books.stream()
-                    .filter(b -> b.getPrice() != null &&
-                            b.getPrice().compareTo(min) >= 0)
-                    .collect(Collectors.toList());
+                    .filter(b -> b.getPrice().compareTo(fMinPrice) >= 0)
+                    .toList();
         }
 
-        // --- Max price filter ---
         if (maxPrice != null) {
-            BigDecimal max = maxPrice;
+            final BigDecimal fMaxPrice = maxPrice;
             books = books.stream()
-                    .filter(b -> b.getPrice() != null &&
-                            b.getPrice().compareTo(max) <= 0)
-                    .collect(Collectors.toList());
+                    .filter(b -> b.getPrice().compareTo(fMaxPrice) <= 0)
+                    .toList();
         }
 
-        // --- In-stock filter ---
         if (Boolean.TRUE.equals(inStock)) {
             books = books.stream()
                     .filter(b -> b.getStock() > 0)
                     .collect(Collectors.toList());
         }
 
-        // --- Add filtered results + sticky values ---
-        model.addAttribute("books", books);
+        // -----------------------------------
+        // STEP 3 — pagination
+        // -----------------------------------
+        int start = page * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, books.size());
+
+        List<Book> booksPage = new ArrayList<>();
+        if (start < books.size()) {
+            booksPage = books.subList(start, end);
+        }
+
+        int totalPages = (int) Math.ceil((double) books.size() / PAGE_SIZE);
+
+        // -----------------------------------
+        // Add values to model for Thymeleaf
+        // -----------------------------------
+        model.addAttribute("books", booksPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+
+        // Filters (sticky)
         model.addAttribute("keyword", keyword);
         model.addAttribute("categories", br.findDistinctCategories());
         model.addAttribute("selectedCategory", category);
@@ -104,7 +124,7 @@ public class ShopController {
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("inStock", inStock);
 
-        // --- Recommendations for logged-in user ---
+        // Recommendations
         model.addAttribute("recommendedBooks", getRecommendationsForCurrentUser(principal));
 
         return "shop";

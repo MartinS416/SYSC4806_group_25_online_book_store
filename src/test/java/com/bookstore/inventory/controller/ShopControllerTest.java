@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -104,12 +103,16 @@ class ShopControllerTest {
         String viewName = controller.showShopPage(
                 null, "Fantasy",
                 null, null,
-                null, model, null
+                null,
+                0,                   // page
+                model,
+                null
         );
 
         assertEquals("shop", viewName);
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
+
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
         assertEquals("Fantasy", resultBooks.getFirst().getCategory());
@@ -150,6 +153,7 @@ class ShopControllerTest {
                 new BigDecimal("0.00"),
                 new BigDecimal("20.00"),
                 null,
+                0,
                 model,
                 null
         );
@@ -157,6 +161,7 @@ class ShopControllerTest {
         assertEquals("shop", viewName);
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
+
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
         assertTrue(resultBooks.getFirst().getPrice().compareTo(new BigDecimal("20.00")) <= 0);
@@ -174,6 +179,15 @@ class ShopControllerTest {
     @Test
     @DisplayName("Recommendations return books for logged-in customer")
     void recommendations_shouldReturnBooksForLoggedInCustomer() {
+        // Mocks
+        BookRepository bookRepository = mock(BookRepository.class);
+        CustomerRepository customerRepository = mock(CustomerRepository.class);
+        OrderRepository orderRepository = mock(OrderRepository.class);
+        OrderLineRepository orderLineRepository = mock(OrderLineRepository.class);
+
+        ShopController controller =
+                new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
+
         Customer currentCustomer = new Customer();
         currentCustomer.setId(1L);
 
@@ -194,6 +208,7 @@ class ShopControllerTest {
         book2.setCategory("Fantasy");
         book2.setStock(5);
 
+        // Orders
         Order order1 = new Order();
         order1.setCustomer(currentCustomer);
         OrderLine line1 = new OrderLine();
@@ -216,11 +231,13 @@ class ShopControllerTest {
         when(orderLineRepository.findByOrder(order2)).thenReturn(List.of(line2, line3));
 
         Principal principal = () -> "user@example.com";
+
         when(customerRepository.findByEmail("user@example.com"))
                 .thenReturn(Optional.of(currentCustomer));
 
         when(bookRepository.findAll()).thenReturn(List.of(book1, book2));
         when(bookRepository.findDistinctCategories()).thenReturn(List.of("Fantasy"));
+
         when(bookRepository.findAllById(any(Iterable.class)))
                 .thenAnswer(invocation -> {
                     Iterable<Long> ids = invocation.getArgument(0);
@@ -242,6 +259,7 @@ class ShopControllerTest {
                 null, null,
                 null, null,
                 null,
+                0,
                 model,
                 principal
         );
@@ -249,6 +267,7 @@ class ShopControllerTest {
         assertEquals("shop", viewName);
         @SuppressWarnings("unchecked")
         List<Book> recommended = (List<Book>) model.getAttribute("recommendedBooks");
+
         assertNotNull(recommended);
         assertFalse(recommended.isEmpty());
     }

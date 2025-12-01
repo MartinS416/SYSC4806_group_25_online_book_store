@@ -32,13 +32,29 @@ public class AdminBookController {
             Model model
     ) {
 
-        model.addAttribute("books",
-                bookService.filterBooks(keyword, category, minPrice, maxPrice));
+        BigDecimal safeMin = (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? minPrice
+                : null;
 
+        BigDecimal safeMax = (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? maxPrice
+                : null;
+
+        if (safeMin != null && safeMax != null && safeMin.compareTo(safeMax) > 0) {
+            BigDecimal temp = safeMin;
+            safeMin = safeMax;
+            safeMax = temp;
+        }
+
+        // --- Fetch filtered books using normalized values ---
+        model.addAttribute("books",
+                bookService.filterBooks(keyword, category, safeMin, safeMax));
+
+        // --- Sticky form fields ---
         model.addAttribute("keyword", keyword);
         model.addAttribute("category", category);
-        model.addAttribute("minPrice", minPrice);
-        model.addAttribute("maxPrice", maxPrice);
+        model.addAttribute("minPrice", safeMin);
+        model.addAttribute("maxPrice", safeMax);
 
         model.addAttribute("categories", bookService.findAllCategories());
 
@@ -55,14 +71,28 @@ public class AdminBookController {
             HttpServletResponse response
     ) throws IOException {
 
-        List<Book> filteredBooks = bookService.filterBooks(keyword, category, minPrice, maxPrice);
+        // Normalize same as UI filtering
+        BigDecimal safeMin = (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? minPrice
+                : null;
+
+        BigDecimal safeMax = (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? maxPrice
+                : null;
+
+        if (safeMin != null && safeMax != null && safeMin.compareTo(safeMax) > 0) {
+            BigDecimal temp = safeMin;
+            safeMin = safeMax;
+            safeMax = temp;
+        }
+
+        List<Book> filteredBooks = bookService.filterBooks(keyword, category, safeMin, safeMax);
 
         response.setContentType("text/csv");
         String filename = "books-filtered-" + System.currentTimeMillis() + ".csv";
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
         PrintWriter writer = response.getWriter();
-
         writer.println("ID,Title,Author,Category,Price,Stock");
 
         for (Book book : filteredBooks) {
