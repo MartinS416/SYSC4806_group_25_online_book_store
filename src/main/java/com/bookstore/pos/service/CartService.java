@@ -251,23 +251,38 @@ public class CartService {
             throw new IllegalStateException("Cannot checkout an empty cart");
         }
 
+        // Save address
+        addressRepository.save(address);
+
+        // Create order
         Order order = new Order();
         order.setCustomer(cart.getCustomer());
-        order.setCreatedAt(Instant.now());
-        addressRepository.save(address);
         order.setAddress(address);
-        Order savedOrder = orderRepository.save(order);
+        order.setCreatedAt(Instant.now());
+
+        // Fill snapshot details
+        order.setName(address.getFirstName() + " " + address.getLastName());
+        order.setEmail(cart.getCustomer().getEmail());
+        order.setPhone(cart.getCustomer().getPhone());
+
+        // Save empty order first (needed for FK)
+        orderRepository.save(order);
 
         int count = 0;
-        for (CartItem ci : new ArrayList<>(items)) {
+        for (CartItem ci : items) {
+
             OrderLine line = new OrderLine();
             line.setBook(ci.getBook());
             line.setQuantity(ci.getQuantity());
-            line.setSubtotal(ci.getBook().getPrice());
-            line.setOrder(savedOrder);
-            orderLineRepository.save(line);
-            count++;
+            line.setPrice(ci.getBook().getPrice());
+            line.setSubtotal(ci.getBook().getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+
+            // Add line to order (updates totalAmount)
+            order.addOrderLine(line);
         }
+
+        // Save again after lines were added
+        orderRepository.save(order);
 
         return count;
     }
