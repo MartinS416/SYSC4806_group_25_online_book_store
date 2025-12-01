@@ -1,5 +1,6 @@
 package com.bookstore.pos.service;
 
+import com.bookstore.demo.dto.OrderLineDto;
 import com.bookstore.demo.model.*;
 import com.bookstore.pos.model.*;
 import com.bookstore.pos.repository.OrderLineRepository;
@@ -40,6 +41,21 @@ public class OrderService {
         Order order = findById(id);
         order.setStatus(status);
         return orderRepository.save(order);
+    }
+
+    public List<OrderLineDto> getOrderLineDTOs(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
+        return order.getOrderLines().stream()
+                .map(line -> new OrderLineDto(
+                        line.getBook().getTitle(),
+                        line.getQuantity(),
+                        line.getPrice(),
+                        line.getSubtotal()
+                ))
+                .toList();
     }
 
     public Order addPayment(Long id, Payment payment) {

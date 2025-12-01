@@ -1,4 +1,11 @@
 package com.bookstore.demo.dto;
 
-public class OrderLineDto {
-}
+
+import java.math.BigDecimal;
+
+public record OrderLineDto(
+        String title,
+        int quantity,
+        BigDecimal price,
+        BigDecimal subtotal
+) {}
