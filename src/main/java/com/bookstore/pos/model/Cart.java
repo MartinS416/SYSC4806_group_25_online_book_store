@@ -1,6 +1,6 @@
 package com.bookstore.pos.model;
 
-import com.bookstore.demo.model.Customer;
+import com.bookstore.common.model.Customer;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;

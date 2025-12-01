@@ -1,7 +1,8 @@
 package com.bookstore.pos.service;
 
-import com.bookstore.demo.model.Address;
-import com.bookstore.demo.model.Customer;
+import com.bookstore.common.model.Address;
+import com.bookstore.common.model.Customer;
+import com.bookstore.inventory.model.Book;
 import com.bookstore.pos.model.CartItem;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderStatus;
@@ -170,12 +171,12 @@ class OrderServiceTest {
     void createOrder_buildsLinesAndTotals() {
         CartItem item1 = new CartItem();
         item1.setQuantity(2);
-        item1.setBook(new com.bookstore.demo.model.Book());
+        item1.setBook(new Book());
         item1.getBook().setPrice(new BigDecimal("10.00"));
 
         CartItem item2 = new CartItem();
         item2.setQuantity(1);
-        item2.setBook(new com.bookstore.demo.model.Book());
+        item2.setBook(new Book());
         item2.getBook().setPrice(new BigDecimal("5.50"));
 
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));

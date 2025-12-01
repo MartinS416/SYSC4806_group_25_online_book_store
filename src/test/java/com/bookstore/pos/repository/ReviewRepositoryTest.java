@@ -1,7 +1,7 @@
 package com.bookstore.pos.repository;
 
 import com.bookstore.pos.model.Review;
-import com.bookstore.demo.model.Book;
+import com.bookstore.inventory.model.Book;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

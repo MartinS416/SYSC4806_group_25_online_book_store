@@ -1,7 +1,7 @@
 package com.bookstore.pos.model;
 
-import com.bookstore.demo.model.Address;
-import com.bookstore.demo.model.Customer;
+import com.bookstore.common.model.Address;
+import com.bookstore.common.model.Customer;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;

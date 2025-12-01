@@ -1,6 +1,6 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Customer;
+import com.bookstore.common.model.Customer;
 import com.bookstore.pos.model.Cart;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

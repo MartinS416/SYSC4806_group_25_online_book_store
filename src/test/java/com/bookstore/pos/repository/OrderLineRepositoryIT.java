@@ -1,6 +1,6 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Book;
+import com.bookstore.inventory.model.Book;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderLine;
 import com.bookstore.pos.model.OrderStatus;

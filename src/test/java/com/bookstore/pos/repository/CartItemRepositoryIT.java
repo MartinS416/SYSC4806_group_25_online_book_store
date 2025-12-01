@@ -1,6 +1,6 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Book;
+import com.bookstore.inventory.model.Book;
 import com.bookstore.pos.model.Cart;
 import com.bookstore.pos.model.CartItem;
 import org.junit.jupiter.api.Test;
