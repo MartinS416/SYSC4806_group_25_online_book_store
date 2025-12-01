@@ -49,6 +49,26 @@ public class CartController {
         return "shop";
     }
 
+    @PostMapping("/cart/add/{id}")
+    public String addLegacy(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) return "redirect:/login";
+
+        Customer customer = customerRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
+
+        // Reduce stock
+        Book book = books.findById(id).orElse(null);
+        if (book != null && book.getStock() > 0) {
+            book.setStock(book.getStock() - 1);
+            books.save(book);
+        }
+
+        Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
+        cartService.addItem(cart.getId(), id, 1);
+
+        return "redirect:/cart";
+    }
+
     /**
      * Add a book to the cart.
      *
