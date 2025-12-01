@@ -23,7 +23,9 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    public Book() {}
+    public Book() {
+        this.price = BigDecimal.ZERO;
+    }
 
     public Book(String title, String author, BigDecimal price, String category, int stock) {
         this.title = title;

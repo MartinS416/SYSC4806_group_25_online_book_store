@@ -1,15 +1,19 @@
-package com.bookstore.common.controller;
+package com.bookstore.inventory.controller;
 
 import com.bookstore.inventory.model.Book;
 import com.bookstore.common.model.Customer;
-import com.bookstore.inventory.controller.ShopController;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderLine;
 import com.bookstore.inventory.repository.BookRepository;
 import com.bookstore.common.repository.CustomerRepository;
 import com.bookstore.pos.repository.OrderLineRepository;
 import com.bookstore.pos.repository.OrderRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -23,18 +27,61 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class ShopControllerTest {
+/**
+ * Unit tests for {@link ShopController}.
+ *
+ * <h2>Test Design Specification (TDS) Alignment</h2>
+ * <ul>
+ *   <li><strong>Test Category:</strong> Unit Tests (UT)</li>
+ *   <li><strong>Layer:</strong> Web/Controller</li>
+ *   <li><strong>Scope:</strong> Shop page filtering, recommendations, and model population</li>
+ *   <li><strong>Dependencies:</strong> {@link BookRepository}, {@link CustomerRepository},
+ *       {@link OrderRepository}, {@link OrderLineRepository} (all mocked)</li>
+ *   <li><strong>Framework:</strong> JUnit 5, Mockito, Spring MVC {@link Model}</li>
+ * </ul>
+ *
+ * <h2>Objectives</h2>
+ * <ul>
+ *   <li>Verify that {@link ShopController#showShopPage} filters by category and price correctly.</li>
+ *   <li>Verify that recommendations for a logged-in customer are computed and exposed via the model.</li>
+ *   <li>Ensure correct view names and model attributes without starting a web server.</li>
+ * </ul>
+ *
+ * @author Lavji, Fareen
+ * @version 3.0
+ * @since 2025-12-01
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ShopController Unit Tests")
+class ShopControllerTest {
 
+    @Mock
+    private BookRepository bookRepository;
+
+    @Mock
+    private CustomerRepository customerRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderLineRepository orderLineRepository;
+
+    @InjectMocks
+    private ShopController controller;
+
+    /**
+     * Test: Should return only books in the selected category.
+     * Scenario:
+     *  - Repository returns books from multiple categories.
+     *  - Controller is called with category filter="Fantasy".
+     * Expected:
+     *  - View name is "shop".
+     *  - Model "books" contains only Fantasy books.
+     */
     @Test
+    @DisplayName("Filter by category returns only matching books")
     void filterByCategory_shouldReturnOnlyBooksInThatCategory() {
-        BookRepository bookRepository = mock(BookRepository.class);
-        CustomerRepository customerRepository = mock(CustomerRepository.class);
-        OrderRepository orderRepository = mock(OrderRepository.class);
-        OrderLineRepository orderLineRepository = mock(OrderLineRepository.class);
-
-        ShopController controller =
-                new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
-
         Book fantasyBook = new Book();
         fantasyBook.setTitle("The Hobbit");
         fantasyBook.setAuthor("J.R.R. Tolkien");
@@ -61,24 +108,24 @@ public class ShopControllerTest {
         );
 
         assertEquals("shop", viewName);
-
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
-        assertEquals("Fantasy", resultBooks.get(0).getCategory());
+        assertEquals("Fantasy", resultBooks.getFirst().getCategory());
     }
 
+    /**
+     * Test: Should return only books within the requested price range.
+     * Scenario:
+     *  - Books exist below and above the max price.
+     * Expected:
+     *  - View name is "shop".
+     *  - Model "books" contains only books within [minPrice, maxPrice].
+     */
     @Test
+    @DisplayName("Filter by price range returns only books within range")
     void filterByPriceRange_shouldReturnOnlyBooksWithinRange() {
-        BookRepository bookRepository = mock(BookRepository.class);
-        CustomerRepository customerRepository = mock(CustomerRepository.class);
-        OrderRepository orderRepository = mock(OrderRepository.class);
-        OrderLineRepository orderLineRepository = mock(OrderLineRepository.class);
-
-        ShopController controller =
-                new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
-
         Book cheap = new Book();
         cheap.setTitle("Cheap Book");
         cheap.setAuthor("Author A");
@@ -108,24 +155,25 @@ public class ShopControllerTest {
         );
 
         assertEquals("shop", viewName);
-
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
-        assertTrue(resultBooks.get(0).getPrice().compareTo(new BigDecimal("20.00")) <= 0);
+        assertTrue(resultBooks.getFirst().getPrice().compareTo(new BigDecimal("20.00")) <= 0);
     }
 
+    /**
+     * Test: Should compute recommendations for the logged-in customer.
+     * Scenario:
+     *  - Multiple orders exist for different customers.
+     *  - Recommendations should be built based on the current customer's history.
+     * Expected:
+     *  - View name is "shop".
+     *  - Model "recommendedBooks" is present and non-empty.
+     */
     @Test
+    @DisplayName("Recommendations return books for logged-in customer")
     void recommendations_shouldReturnBooksForLoggedInCustomer() {
-        BookRepository bookRepository = mock(BookRepository.class);
-        CustomerRepository customerRepository = mock(CustomerRepository.class);
-        OrderRepository orderRepository = mock(OrderRepository.class);
-        OrderLineRepository orderLineRepository = mock(OrderLineRepository.class);
-
-        ShopController controller =
-                new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
-
         Customer currentCustomer = new Customer();
         currentCustomer.setId(1L);
 
@@ -162,6 +210,7 @@ public class ShopControllerTest {
         line3.setBook(book2);
 
         List<Order> allOrders = List.of(order1, order2);
+
         when(orderRepository.findAll()).thenReturn(allOrders);
         when(orderLineRepository.findByOrder(order1)).thenReturn(List.of(line1));
         when(orderLineRepository.findByOrder(order2)).thenReturn(List.of(line2, line3));
@@ -172,7 +221,6 @@ public class ShopControllerTest {
 
         when(bookRepository.findAll()).thenReturn(List.of(book1, book2));
         when(bookRepository.findDistinctCategories()).thenReturn(List.of("Fantasy"));
-
         when(bookRepository.findAllById(any(Iterable.class)))
                 .thenAnswer(invocation -> {
                     Iterable<Long> ids = invocation.getArgument(0);
@@ -199,7 +247,6 @@ public class ShopControllerTest {
         );
 
         assertEquals("shop", viewName);
-
         @SuppressWarnings("unchecked")
         List<Book> recommended = (List<Book>) model.getAttribute("recommendedBooks");
         assertNotNull(recommended);
