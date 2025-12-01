@@ -1,6 +1,5 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.repository.BookRepository;
 import com.bookstore.pos.model.Review;
 import com.bookstore.inventory.model.Book;
 import org.junit.jupiter.api.Test;
@@ -23,9 +22,6 @@ class ReviewRepositoryIT {
 
     @Autowired
     private ReviewRepository reviewRepository;
-
-    @Autowired
-    private BookRepository books;
 
     /**
      * Verifies that {@link ReviewRepository#findByBookId(Long)} returns reviews
