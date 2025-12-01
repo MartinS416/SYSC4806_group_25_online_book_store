@@ -1,6 +1,6 @@
 package com.bookstore.pos.model;
 
-import com.bookstore.demo.model.Book;
+import com.bookstore.inventory.model.Book;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;

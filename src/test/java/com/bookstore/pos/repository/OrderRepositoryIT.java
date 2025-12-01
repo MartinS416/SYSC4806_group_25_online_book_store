@@ -1,9 +1,9 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Address;
-import com.bookstore.demo.model.Customer;
-import com.bookstore.demo.repository.AddressRepository;
-import com.bookstore.demo.repository.CustomerRepository;
+import com.bookstore.common.model.Address;
+import com.bookstore.common.model.Customer;
+import com.bookstore.common.repository.AddressRepository;
+import com.bookstore.common.repository.CustomerRepository;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderStatus;
 import org.junit.jupiter.api.Test;
@@ -74,7 +74,7 @@ class OrderRepositoryIT {
 
         List<Order> result = orderRepository.findAllByOrderByCreatedAtDesc();
         assertEquals(2, result.size());
-        assertEquals(newer.getTotalAmount(), result.get(0).getTotalAmount());
+        assertEquals(newer.getTotalAmount(), result.getFirst().getTotalAmount());
     }
 
     /**

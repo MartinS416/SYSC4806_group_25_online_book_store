@@ -1,7 +1,6 @@
 package com.bookstore.pos.model;
 
-import com.bookstore.demo.model.Book;
-import com.bookstore.demo.model.Customer;
+import com.bookstore.inventory.model.Book;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 

@@ -1,7 +1,7 @@
 package com.bookstore.pos.service;
 
-import com.bookstore.demo.dto.OrderLineDto;
-import com.bookstore.demo.model.*;
+import com.bookstore.common.dto.OrderLineDto;
+import com.bookstore.common.model.*;
 import com.bookstore.pos.model.*;
 import com.bookstore.pos.repository.OrderLineRepository;
 import com.bookstore.pos.repository.OrderRepository;

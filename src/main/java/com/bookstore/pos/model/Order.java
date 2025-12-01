@@ -1,7 +1,7 @@
 package com.bookstore.pos.model;
 
-import com.bookstore.demo.model.Address;
-import com.bookstore.demo.model.Customer;
+import com.bookstore.common.model.Address;
+import com.bookstore.common.model.Customer;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,7 +35,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.NEW;
 
-    @Column(precision = 12, scale = 2)
+    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
     private Instant createdAt = Instant.now();
