@@ -39,19 +39,36 @@
             margin-bottom: 20px;
             font-weight: bold;
         }
+
+        /* SCROLLABLE CHART */
+        .scroll-chart-container {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        /* Make the chart wider so horizontal scrolling is enabled */
+        #revenueChart {
+            min-width: 1200px;
+        }
     </style>
 </head>
 
 <body class="container py-4">
 
+<!-- HEADER -->
 <div class="admin-header text-center">
     <h1>Admin Dashboard</h1>
     <p class="mb-0">Revenue, sales, and analytics</p>
 </div>
 
+<!-- DAILY REVENUE -->
 <div class="card shadow-sm p-4 mb-5">
     <h3 class="mb-3">Daily Revenue</h3>
-    <canvas id="revenueChart" height="100"></canvas>
+
+    <div class="scroll-chart-container">
+        <canvas id="revenueChart" height="100"></canvas>
+    </div>
 </div>
 
 <script th:inline="javascript">
@@ -59,8 +76,16 @@
 
     const dailyRevenue = /*[[${dailyRevenue}]]*/ [];
 
-    const labels = dailyRevenue.map(d => d.date);
-    const values = dailyRevenue.map(d => d.revenue);
+    // Extract full data
+    const allLabels = dailyRevenue.map(d => d.date);
+    const allValues = dailyRevenue.map(d => d.revenue);
+
+    // Limit visible range to last X days
+    const MAX_VISIBLE_DAYS = 30;
+    const startIndex = Math.max(0, allLabels.length - MAX_VISIBLE_DAYS);
+
+    const labels = allLabels.slice(startIndex);
+    const values = allValues.slice(startIndex);
 
     new Chart(document.getElementById('revenueChart'), {
         type: 'line',
@@ -74,12 +99,17 @@
                 backgroundColor: 'rgba(204, 0, 51, 0.2)',
                 tension: 0.3
             }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
 
     /*]]>*/
 </script>
 
+<!-- TOP BOOKS -->
 <h3 class="section-title">Top Selling Books</h3>
 <div class="card shadow-sm p-3">
     <table class="table table-hover table-striped mb-0">
@@ -93,6 +123,37 @@
         <tr th:each="book : ${topBooks}">
             <td th:text="${book.title}"></td>
             <td th:text="${book.units}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- RECENT ORDERS -->
+<h3 class="section-title">Recent Orders</h3>
+
+<div class="card shadow-sm p-3" style="max-height: 350px; overflow-y: auto;">
+    <table class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+        <tr>
+            <th>Order ID</th>
+            <th>Email</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Address</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="o : ${orders}">
+            <td th:text="${o.id}"></td>
+
+            <td th:text="${o.email}"></td>
+
+            <td th:text="${#temporals.format(o.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+
+            <td>$<span th:text="${o.totalAmount}"></span></td>
+
+            <td th:text="${o.address.street + ', ' + o.address.city}"></td>
         </tr>
         </tbody>
     </table>
