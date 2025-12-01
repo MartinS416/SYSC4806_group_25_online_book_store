@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -55,21 +56,51 @@ public class CartController {
      * @param principal The logged-in customer.
      * @return New cart view.
      */
-    @PostMapping("/cart/add/{id}")
-    public String add(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal) {
-        if (principal == null) return "redirect:/login";
+    @PostMapping("/cart/add-ajax/{id}")
+    @ResponseBody
+    public Map<String, Object> addAjax(@PathVariable Long id,
+                                       @AuthenticationPrincipal CustomUserDetails principal) {
+
+        Map<String, Object> result = new HashMap<>();
+
+        if (principal == null) {
+            result.put("error", "not_logged_in");
+            return result;
+        }
 
         Customer customer = customerRepository.findByEmail(principal.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Customer not found: " + principal.getUsername()));
-        Book book = books.getReferenceById(id);
-        if(book.getStock() > 0){
-            book.setStock(book.getStock() - 1);
-        } else {
-            return "redirect:/shop";
+                .orElse(null);
+
+        if (customer == null) {
+            result.put("error", "customer_not_found");
+            return result;
         }
+
+        Book book = books.findById(id).orElse(null);
+        if (book == null) {
+            result.put("error", "book_not_found");
+            return result;
+        }
+
+        // --- Check stock before updating ---
+        if (book.getStock() <= 0) {
+            result.put("error", "out_of_stock");
+            return result;
+        }
+
+        // --- Reduce stock ---
+        book.setStock(book.getStock() - 1);
+        books.save(book);
+
+        // --- Add item to cart ---
         Cart cart = cartService.findOrCreateCartForCustomer(customer.getId());
         cartService.addItem(cart.getId(), id, 1);
-        return "redirect:/shop";
+
+        // --- Return JSON to front-end ---
+        result.put("newStock", book.getStock());
+        result.put("success", true);
+
+        return result;
     }
 
     /**

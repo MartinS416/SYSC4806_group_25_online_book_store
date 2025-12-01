@@ -14,18 +14,16 @@ import org.springframework.ui.Model;
 
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class ShopControllerTest {
 
     @Test
     void filterByCategory_shouldReturnOnlyBooksInThatCategory() {
+        // Mock dependencies
         BookRepository bookRepository = mock(BookRepository.class);
         CustomerRepository customerRepository = mock(CustomerRepository.class);
         OrderRepository orderRepository = mock(OrderRepository.class);
@@ -34,19 +32,9 @@ public class ShopControllerTest {
         ShopController controller =
                 new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
 
-        Book fantasyBook = new Book();
-        fantasyBook.setTitle("The Hobbit");
-        fantasyBook.setAuthor("J.R.R. Tolkien");
-        fantasyBook.setCategory("Fantasy");
-        fantasyBook.setPrice(new BigDecimal("14.99"));
-        fantasyBook.setStock(10);
-
-        Book horrorBook = new Book();
-        horrorBook.setTitle("It");
-        horrorBook.setAuthor("Stephen King");
-        horrorBook.setCategory("Horror");
-        horrorBook.setPrice(new BigDecimal("19.99"));
-        horrorBook.setStock(5);
+        // Test data
+        Book fantasyBook = new Book("The Hobbit", "J.R.R. Tolkien", new BigDecimal("14.99"), "Fantasy", 10);
+        Book horrorBook = new Book("It", "Stephen King", new BigDecimal("19.99"), "Horror", 5);
 
         when(bookRepository.findAll()).thenReturn(List.of(fantasyBook, horrorBook));
         when(bookRepository.findDistinctCategories()).thenReturn(List.of("Fantasy", "Horror"));
@@ -56,13 +44,17 @@ public class ShopControllerTest {
         String viewName = controller.showShopPage(
                 null, "Fantasy",
                 null, null,
-                null, model, null
+                null,
+                0,                   // page
+                model,
+                null
         );
 
         assertEquals("shop", viewName);
 
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
+
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
         assertEquals("Fantasy", resultBooks.get(0).getCategory());
@@ -78,19 +70,8 @@ public class ShopControllerTest {
         ShopController controller =
                 new ShopController(bookRepository, customerRepository, orderRepository, orderLineRepository);
 
-        Book cheap = new Book();
-        cheap.setTitle("Cheap Book");
-        cheap.setAuthor("Author A");
-        cheap.setCategory("Sci-Fi");
-        cheap.setPrice(new BigDecimal("5.00"));
-        cheap.setStock(10);
-
-        Book expensive = new Book();
-        expensive.setTitle("Expensive Book");
-        expensive.setAuthor("Author B");
-        expensive.setCategory("Sci-Fi");
-        expensive.setPrice(new BigDecimal("50.00"));
-        expensive.setStock(10);
+        Book cheap = new Book("Cheap Book", "Author A", new BigDecimal("5.00"), "Sci-Fi", 10);
+        Book expensive = new Book("Expensive Book", "Author B", new BigDecimal("50.00"), "Sci-Fi", 10);
 
         when(bookRepository.findAll()).thenReturn(List.of(cheap, expensive));
         when(bookRepository.findDistinctCategories()).thenReturn(List.of("Sci-Fi"));
@@ -102,6 +83,7 @@ public class ShopControllerTest {
                 new BigDecimal("0.00"),
                 new BigDecimal("20.00"),
                 null,
+                0,
                 model,
                 null
         );
@@ -110,6 +92,7 @@ public class ShopControllerTest {
 
         @SuppressWarnings("unchecked")
         List<Book> resultBooks = (List<Book>) model.getAttribute("books");
+
         assertNotNull(resultBooks);
         assertEquals(1, resultBooks.size());
         assertTrue(resultBooks.get(0).getPrice().compareTo(new BigDecimal("20.00")) <= 0);
@@ -117,6 +100,7 @@ public class ShopControllerTest {
 
     @Test
     void recommendations_shouldReturnBooksForLoggedInCustomer() {
+        // Mocks
         BookRepository bookRepository = mock(BookRepository.class);
         CustomerRepository customerRepository = mock(CustomerRepository.class);
         OrderRepository orderRepository = mock(OrderRepository.class);
@@ -145,6 +129,7 @@ public class ShopControllerTest {
         book2.setCategory("Fantasy");
         book2.setStock(5);
 
+        // Orders
         Order order1 = new Order();
         order1.setCustomer(currentCustomer);
         OrderLine line1 = new OrderLine();
@@ -160,12 +145,12 @@ public class ShopControllerTest {
         line3.setOrder(order2);
         line3.setBook(book2);
 
-        List<Order> allOrders = List.of(order1, order2);
-        when(orderRepository.findAll()).thenReturn(allOrders);
+        when(orderRepository.findAll()).thenReturn(List.of(order1, order2));
         when(orderLineRepository.findByOrder(order1)).thenReturn(List.of(line1));
         when(orderLineRepository.findByOrder(order2)).thenReturn(List.of(line2, line3));
 
         Principal principal = () -> "user@example.com";
+
         when(customerRepository.findByEmail("user@example.com"))
                 .thenReturn(Optional.of(currentCustomer));
 
@@ -177,10 +162,10 @@ public class ShopControllerTest {
                     Iterable<Long> ids = invocation.getArgument(0);
                     List<Book> result = new ArrayList<>();
                     for (Long id : ids) {
-                        if (id.equals(book1.getId())) {
+                        if (Objects.equals(id, book1.getId())) {
                             result.add(book1);
                         }
-                        if (id.equals(book2.getId())) {
+                        if (Objects.equals(id, book2.getId())) {
                             result.add(book2);
                         }
                     }
@@ -193,6 +178,7 @@ public class ShopControllerTest {
                 null, null,
                 null, null,
                 null,
+                0,
                 model,
                 principal
         );
@@ -201,6 +187,7 @@ public class ShopControllerTest {
 
         @SuppressWarnings("unchecked")
         List<Book> recommended = (List<Book>) model.getAttribute("recommendedBooks");
+
         assertNotNull(recommended);
         assertFalse(recommended.isEmpty());
     }
