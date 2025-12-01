@@ -2,6 +2,30 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<style>
+    /* Pagination matching your theme */
+
+    .pagination .page-link {
+        color: #CC0033;                /* Red text */
+        border-color: #CC0033;         /* Red border */
+    }
+
+    .pagination .page-link:hover {
+        background-color: #CC0033;     /* Red on hover */
+        color: white;                  /* White text on hover */
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #CC0033;     /* Active page */
+        color: white;
+        border-color: #CC0033;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #999;                   /* Disabled next/prev */
+        border-color: #ccc;
+    }
+</style>
 
 <head>
     <meta charset="UTF-8">
@@ -43,13 +67,13 @@
 
 <body class="bg-light">
 
-<!-- Navigation bar -->
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#CC0033;">
     <div class="container">
         <a class="navbar-brand" href="#">
             <span th:if="${#authorization.expression('isAuthenticated()')}"
-                  th:text="${#authentication.name + '’s Online Bookstore'}">
-            </span>
+                  th:text="${#authentication.principal.displayName + '’s Online Bookstore'}"></span>
+
             <span th:if="${#authorization.expression('!isAuthenticated()')}">
                 Online Bookstore
             </span>
@@ -59,12 +83,15 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link active" th:href="@{/shop}">Shop</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/cart}">Cart</a></li>
+
                 <li class="nav-item" sec:authorize="!isAuthenticated()">
                     <a class="nav-link" th:href="@{/login}">Sign In / Sign Up</a>
                 </li>
+
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" th:href="@{/logout}">Sign Out</a>
                 </li>
+
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" th:href="@{/profile}">Profile</a>
                 </li>
@@ -95,6 +122,8 @@
         closeForm();
     }
 </script>
+
+
 <div class="container mt-4">
     <div class="row">
 
@@ -118,7 +147,7 @@
                             <label class="form-label" for="category">Category</label>
                             <select id="category" name="category" class="form-select">
                                 <option th:value="${''}"
-                                        th:selected="${selectedCategory == null or selectedCategory == ''}">
+                                        th:selected="${selectedCategory == null || selectedCategory == ''}">
                                     All categories
                                 </option>
                                 <option th:each="cat : ${categories}"
@@ -129,7 +158,7 @@
                             </select>
                         </div>
 
-                        <!-- Price range -->
+                        <!-- Price -->
                         <div class="mb-3">
                             <label class="form-label">Price range</label>
                             <div class="d-flex gap-2">
@@ -147,19 +176,16 @@
                             <label class="form-check-label" for="inStock">In stock only</label>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <button class="btn text-white" style="background:#CC0033;" type="submit">
-                                Apply filters
-                            </button>
-                            <a th:href="@{/shop}" class="btn btn-outline-secondary btn-sm">Clear</a>
-                        </div>
-
+                        <button class="btn text-white w-100" style="background:#CC0033;" type="submit">
+                            Apply filters
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Books + Recommendations -->
+
+        <!-- Books -->
         <div class="col-md-9">
 
             <h2 class="mb-3">Available Books</h2>
@@ -172,43 +198,102 @@
                 <div th:each="b : ${books}" class="col-md-4 mb-3">
                     <div class="card h-100 shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title" th:text="${b.title}">Title</h5>
+
+                            <h5 class="card-title" th:text="${b.title}"></h5>
+
                             <p class="card-text">
                                 <strong>Author:</strong> <span th:text="${b.author}"></span><br/>
                                 <strong>Price:</strong> $<span th:text="${b.price}"></span><br/>
                                 <strong>Category:</strong> <span th:text="${b.category}"></span><br/>
-                                <strong>Stock:</strong> <span th:text="${b.stock}"></span>
+                                <strong>Stock:</strong>
+                                <span class="stock-count" th:attr="data-id=${b.id}" th:text="${b.stock}"></span>
                             </p>
 
                             <a th:href="@{'/books/' + ${b.id}}"
-                               class="btn btn-outline-dark w-50 mb-2">View Details</a>
+                               class="btn btn-outline-dark w-100 mb-2">View Details</a>
 
-                            <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
-                                <button class="btn text-white w-50" style="background:#CC0033;">
-                                    Add to Cart
-                                </button>
-                            </form>
+                            <button class="btn text-white w-100 add-to-cart-btn"
+                                    style="background:#CC0033;"
+                                    th:data-id="${b.id}">
+                                Add to Cart
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
+
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}" class="mt-4">
+                <ul class="pagination justify-content-center">
+
+                    <!-- Previous -->
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/shop(
+                               page=${currentPage - 1},
+                               keyword=${keyword},
+                               category=${selectedCategory},
+                               minPrice=${minPrice},
+                               maxPrice=${maxPrice},
+                               inStock=${inStock}
+                           )}">
+                            Previous
+                        </a>
+                    </li>
+
+                    <!-- Page numbers -->
+                    <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'"
+                        class="page-item">
+
+                        <a class="page-link"
+                           th:text="${i + 1}"
+                           th:href="@{/shop(
+                               page=${i},
+                               keyword=${keyword},
+                               category=${selectedCategory},
+                               minPrice=${minPrice},
+                               maxPrice=${maxPrice},
+                               inStock=${inStock}
+                           )}">
+                        </a>
+                    </li>
+
+                    <!-- Next -->
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/shop(
+                               page=${currentPage + 1},
+                               keyword=${keyword},
+                               category=${selectedCategory},
+                               minPrice=${minPrice},
+                               maxPrice=${maxPrice},
+                               inStock=${inStock}
+                           )}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+
             <!-- Recommendations -->
-            <div class="mt-4">
-                <h3 th:if="${!#lists.isEmpty(recommendedBooks)}" class="mb-3">
-                    Recommended for you
-                </h3>
+            <div class="mt-5">
+                <h3 th:if="${!#lists.isEmpty(recommendedBooks)}">Recommended for you</h3>
 
                 <p th:if="${#lists.isEmpty(recommendedBooks)}" class="text-muted">
                     <span sec:authorize="!isAuthenticated()">Sign in to see recommendations.</span>
                     <span sec:authorize="isAuthenticated()">Buy a few books to get recommendations.</span>
                 </p>
 
-                <div th:if="${!#lists.isEmpty(recommendedBooks)}" class="row">
+                <div th:if="${!#lists.isEmpty(recommendedBooks)}" class="row mt-3">
                     <div th:each="b : ${recommendedBooks}" class="col-md-4 mb-3">
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
+
                                 <h5 class="card-title" th:text="${b.title}"></h5>
+
                                 <p class="card-text">
                                     <strong>Author:</strong> <span th:text="${b.author}"></span><br/>
                                     <strong>Price:</strong> $<span th:text="${b.price}"></span><br/>
@@ -216,16 +301,20 @@
                                 </p>
 
                                 <a th:href="@{'/books/' + ${b.id}}"
-                                   class="btn btn-outline-dark w-50 mb-2">View Details</a>
+                                   class="btn btn-outline-dark w-100 mb-2">
+                                    View Details
+                                </a>
 
-                                <form th:action="@{'/cart/add/' + ${b.id}}" method="post">
-                                    <button class="btn w-50 text-white" style="background:#28a745;">
-                                        Add to Cart
-                                    </button>
-                                </form>
+                                <button class="btn text-white w-100 add-to-cart-btn"
+                                        style="background:#28a745;"
+                                        th:data-id="${b.id}">
+                                    Add to Cart
+                                </button>
+
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
@@ -233,6 +322,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+
+                const id = btn.dataset.id;
+
+                const response = await fetch(`/cart/add-ajax/${id}`, {
+                    method: "POST",
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                const data = await response.json();
+
+                if (data.newStock !== undefined) {
+                    const stockSpan = document.querySelector(`.stock-count[data-id='${id}']`);
+                    if (stockSpan) stockSpan.textContent = data.newStock;
+                }
+
+                btn.textContent = "Added!";
+                btn.style.backgroundColor = "#28a745";
+
+                setTimeout(() => {
+                    btn.textContent = "Add to Cart";
+                    btn.style.backgroundColor = "#CC0033";
+                }, 900);
+            });
+        });
+    });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
