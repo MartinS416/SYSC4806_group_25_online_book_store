@@ -1,125 +1,148 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Book Details</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Book Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    
+    <style>
+        .rating-bar-container {
+            width: 260px;
+            height: 12px;
+            background: #eee;
+            border-radius: 6px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 12px;
+        }
+
+        .rating-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #CC0033, #ff5f7a);
+            border-radius: 6px;
+            display: block;
+            transition: width 0.6s ease;
+        }
+    </style>
+
 </head>
 
 <body class="bg-light">
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#CC0033;">
-  <div class="container">
-    <a class="navbar-brand" href="/shop">Online Bookstore</a>
-  </div>
+    <div class="container">
+        <a class="navbar-brand" href="/shop">Online Bookstore</a>
+    </div>
 </nav>
 
 <div class="container mt-4">
 
-  <!-- If book not found -->
-  <div th:if="${book == null}">
-    <p class="text-danger">Book not found.</p>
-  </div>
+    <!-- If book not found -->
+    <div th:if="${book == null}">
+        <p class="text-danger">Book not found.</p>
+    </div>
 
-  <!-- Book Info -->
-  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
+    <!-- Book Info -->
+    <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <h2 th:text="${book.title}" class="mb-2"></h2>
+        <h2 th:text="${book.title}" class="mb-2"></h2>
 
-    <p class="mb-1"><strong>Author:</strong> <span th:text="${book.author}"></span></p>
-    <p class="mb-1"><strong>Category:</strong> <span th:text="${book.category}"></span></p>
-    <p class="mb-1"><strong>Price:</strong> $<span th:text="${book.price}"></span></p>
-    <p class="mb-3"><strong>Stock:</strong> <span th:text="${book.stock}"></span></p>
+        <p><strong>Author:</strong> <span th:text="${book.author}"></span></p>
+        <p><strong>Category:</strong> <span th:text="${book.category}"></span></p>
+        <p><strong>Price:</strong> $<span th:text="${book.price}"></span></p>
+        <p><strong>Stock:</strong> <span th:text="${book.stock}"></span></p>
 
-    <!-- Add to Cart -->
-    <form th:action="@{'/cart/add/' + ${book.id}}" method="post">
-      <button type="submit" class="btn text-white border-0" style="background-color:#CC0033;">
-        Add to Cart
-      </button>
-    </form>
+        <!-- Add to Cart -->
+        <form th:action="@{'/cart/add/' + ${book.id}}" method="post">
+            <button type="submit" class="btn text-white border-0" style="background-color:#CC0033;">
+                Add to Cart
+            </button>
+        </form>
 
-    <a href="/shop" class="btn btn-secondary mt-3">Back to Shop</a>
-  </div>
+        <a href="/shop" class="btn btn-secondary mt-3">Back to Shop</a>
+    </div>
 
-  <!-- Rating Summary -->
-  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
+    <!-- Rating Summary -->
+    <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <h4>Customer Ratings</h4>
+        <h4>Customer Ratings</h4>
 
-    <p>
-      <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)}"></strong> / 5 ★
-      <span class="text-muted" th:text="'(' + ${reviews.size()} + ' reviews)'"></span>
-    </p>
+        <p>
+            <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)}"></strong> / 5 ★
+            <span class="text-muted" th:text="'(' + ${reviews.size()} + ' reviews)'"></span>
+        </p>
 
-    <!-- Rating breakdown (5 to 1) -->
-    <div th:each="i : ${#numbers.sequence(5,1)}" class="mb-2">
 
-      <span th:text="${i} + '★:'"></span>
+        <div th:each="i : ${#numbers.sequence(5,1)}" class="mb-2">
 
-      <div style="width:200px;height:10px;background:#ddd;display:inline-block;margin:0 10px;vertical-align:middle;">
-        <div style="background:#CC0033;height:10px;"
-             th:style="${'width:' +
-                     ((breakdown[5 - i.intValue()] * 100.0) /
-                     (reviews.size() == 0 ? 1 : reviews.size())) + '%'}">
+            <span th:text="${i} + '★:'"></span>
+
+            <div class="rating-bar-container">
+                <div class="rating-bar-fill"
+                     th:style="|width:${barWidth[5 - i.intValue()]}%;|">
+                </div>
+            </div>
+
+            <span th:text="${breakdown[5 - i.intValue()]}"></span>
+
         </div>
-      </div>
-
-      <span th:text="${breakdown[5 - i.intValue()]}"></span>
-
-    </div>
-  </div>
-
-  <!-- Reviews List -->
-  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
-
-    <h4 class="mb-3">Customer Reviews</h4>
-
-    <div th:if="${reviews.isEmpty()}">
-      <p class="text-muted">No reviews yet. Be the first to review!</p>
     </div>
 
-    <div th:each="review : ${reviews}" class="border rounded p-3 mb-3">
-      <h6 th:text="${review.reviewerName}"></h6>
-      <p class="text-warning"><span th:text="${review.rating}"></span>★</p>
-      <p th:text="${review.content}"></p>
+    <!-- Reviews List -->
+    <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
+
+        <h4 class="mb-3">Customer Reviews</h4>
+
+        <div th:if="${reviews.isEmpty()}">
+            <p class="text-muted">No reviews yet. Be the first to review!</p>
+        </div>
+
+        <div th:each="review : ${reviews}" class="border rounded p-3 mb-3">
+            <h6 th:text="${review.reviewerName}"></h6>
+            <p class="text-warning"><span th:text="${review.rating}"></span>★</p>
+            <p th:text="${review.content}"></p>
+        </div>
+
     </div>
-  </div>
 
-  <!-- Leave a Review -->
-  <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
+    <!-- Leave a Review -->
+    <div th:if="${book != null}" class="card p-4 shadow-sm mb-4">
 
-    <h4 class="mb-3">Leave a Review</h4>
+        <h4 class="mb-3">Leave a Review</h4>
 
-    <form th:action="@{'/books/' + ${book.id} + '/reviews'}" method="post">
+        <form th:action="@{'/books/' + ${book.id} + '/reviews'}" method="post">
 
-      <div class="mb-3">
-        <label class="form-label">Your Name</label>
-        <input type="text" name="reviewerName" class="form-control" required>
-      </div>
+            <div class="mb-3">
+                <label class="form-label">Your Name</label>
+                <input type="text" name="reviewerName" class="form-control" required>
+            </div>
 
-      <div class="mb-3">
-        <label class="form-label">Rating</label>
-        <select name="rating" class="form-control" required>
-          <option value="5">5 ★</option>
-          <option value="4">4 ★</option>
-          <option value="3">3 ★</option>
-          <option value="2">2 ★</option>
-          <option value="1">1 ★</option>
-        </select>
-      </div>
+            <div class="mb-3">
+                <label class="form-label">Rating</label>
+                <select name="rating" class="form-control" required>
+                    <option value="5">5 ★</option>
+                    <option value="4">4 ★</option>
+                    <option value="3">3 ★</option>
+                    <option value="2">2 ★</option>
+                    <option value="1">1 ★</option>
+                </select>
+            </div>
 
-      <div class="mb-3">
-        <label class="form-label">Review</label>
-        <textarea name="content" class="form-control" rows="4" required></textarea>
-      </div>
+            <div class="mb-3">
+                <label class="form-label">Review</label>
+                <textarea name="content" class="form-control" rows="4" required></textarea>
+            </div>
 
-      <button type="submit" class="btn text-white" style="background-color:#CC0033;">
-        Submit Review
-      </button>
-    </form>
+            <button type="submit" class="btn text-white" style="background-color:#CC0033;">
+                Submit Review
+            </button>
+        </form>
 
-  </div>
+    </div>
 
 </div>
 
