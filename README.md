@@ -7,7 +7,7 @@ A simple online store that allows individuals to purchase books from a bookstore
 ![Java](https://img.shields.io/badge/java-21-orange)  
 ![Spring Boot](https://img.shields.io/badge/spring--boot-3.3-green)
 
-**Author[s]**: [@fareenlavji](https://github.com/fareenlavji), [@user2](https://github.com/user2), etc.
+**Author[s]**: [@fareenlavji](https://github.com/fareenlavji), [@JamesTucker](https://github.com/shapidobob), etc.
 
 ---
 
@@ -290,13 +290,13 @@ src/test/java/com/bookstore/
 
 ## 📌 Contribution Summary by Milestone
 
-| User      | Milestone 01                | Milestone 02                | Milestone 03                |
-|-----------|-----------------------------|-----------------------------|-----------------------------|
-| [@fareenlavji](https://github.com/fareenlavji) | Programmed entities (models), and repositories.| 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Item 2<br>3. Item 3 | 
-| [@martins416](https://github.com/martins416) | 1. Implemented basic payment processing.<br>2. Implemented website styling and layout.<br>3. Set up Azure hosting and CI/CD pipeline. | 1. Implemented login authentication system.<br>2. Created and configured the database schema.<br>3. Additional backend setup tasks. | 1. Implemented full admin pages and management tools.<br>2. Fixed UI-related bugs across the site.<br>3. Improved overall interface stability. |
-| [@user3](https://github.com/user3) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
-| [@user4](https://github.com/user4) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
-| [@user5](https://github.com/user5) | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 | 1. Item 1<br>2. Item 2<br>3. Item 3 |
+| User                                           | Milestone 01                                                                                                                          | Milestone 02                                                            | Milestone 03                                                                                                                              |
+|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| [@fareenlavji](https://github.com/fareenlavji) | Programmed entities (models), and repositories.                                                                                       | 1. Programmed controllers and systems.<br>2. Refactored models and package layout.<br>3. Added partial suite of unit tests. | 1. Refined DDL to be 3NF compliant.<br>2. Item 2<br>3. Item 3                                                                             | 
+| [@martins416](https://github.com/martins416)   | 1. Implemented basic payment processing.<br>2. Implemented website styling and layout.<br>3. Set up Azure hosting and CI/CD pipeline. | 1. Implemented login authentication system.<br>2. Created and configured the database schema.<br>3. Additional backend setup tasks. | 1. Implemented full admin pages and management tools.<br>2. Fixed UI-related bugs across the site.<br>3. Improved overall interface stability. |
+| [@JamesTucker](https://github.com/shapidobob)  | 1. Added error handling to checkout<br>2. Created first itteration of Readme<br>3. Bug fixes, Edits, and PR reviews                   | 1. Credit card validation<br>2. Checkout logic<br>3. Fixed Bugs in card | 1. Ensured removal of purchaced books<br>2. Added inactive cart system<br>3. Added more error handling and purchace success screen to cart|
+| [@user4](https://github.com/user4)             | 1. Item 1<br>2. Item 2<br>3. Item 3                                                                                                   | 1. Item 1<br>2. Item 2<br>3. Item 3                                     | 1. Item 1<br>2. Item 2<br>3. Item 3                                                                                                       |
+| [@user5](https://github.com/user5)             | 1. Item 1<br>2. Item 2<br>3. Item 3                                                                                                   | 1. Item 1<br>2. Item 2<br>3. Item 3                                     | 1. Item 1<br>2. Item 2<br>3. Item 3                                                                                                       |
 
 <!--
 ---

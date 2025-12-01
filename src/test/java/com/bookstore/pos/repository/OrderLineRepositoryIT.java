@@ -1,6 +1,11 @@
 package com.bookstore.pos.repository;
 
+import com.bookstore.demo.model.Address;
 import com.bookstore.demo.model.Book;
+import com.bookstore.demo.model.Customer;
+import com.bookstore.demo.repository.AddressRepository;
+import com.bookstore.demo.repository.BookRepository;
+import com.bookstore.demo.repository.CustomerRepository;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderLine;
 import com.bookstore.pos.model.OrderStatus;
@@ -30,6 +35,15 @@ class OrderLineRepositoryIT {
     @Autowired
     private OrderLineRepository orderLineRepository;
 
+    @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private BookRepository books;
+
     /**
      * Verifies that order lines can be found by order id and by order entity.
      */
@@ -38,12 +52,35 @@ class OrderLineRepositoryIT {
         Order order = new Order();
         order.setStatus(OrderStatus.NEW);
         order.setTotalAmount(BigDecimal.ZERO);
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        Book book = new Book();
+        books.save(book);
+
+        order.setAddress(address);
+        order.setCustomer(customer);
+
         order = orderRepository.save(order);
 
         OrderLine line = new OrderLine();
         line.setOrder(order);
         line.setPrice(new BigDecimal("10.00"));
         line.setQuantity(1);
+        line.setBook(book);
+
         orderLineRepository.save(line);
 
         List<OrderLine> byOrder = orderLineRepository.findByOrder(order);
@@ -60,6 +97,26 @@ class OrderLineRepositoryIT {
     @Test
     void getTopSellingBooks_returnsAggregatedRows() {
         Order order = new Order();
+        order.setStatus(OrderStatus.NEW);
+        order.setTotalAmount(BigDecimal.ZERO);
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        order.setAddress(address);
+        order.setCustomer(customer);
+
         order = orderRepository.save(order);
 
         Book book = new Book();
@@ -84,6 +141,24 @@ class OrderLineRepositoryIT {
     @Test
     void getRevenueByCategory_returnsAggregatedRows() {
         Order order = new Order();
+
+        Customer customer = new Customer();
+        customerRepository.save(customer);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setFirstName("john");
+        address.setLastName("johnson");
+        address.setCity("ottawa");
+        address.setStreet("123 street");
+        address.setRegion("ont");
+        address.setPostcode("A1A 1A1");
+
+        addressRepository.save(address);
+
+        order.setAddress(address);
+        order.setCustomer(customer);
+
         order = orderRepository.save(order);
 
         Book book = new Book();

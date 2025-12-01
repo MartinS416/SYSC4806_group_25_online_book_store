@@ -1,5 +1,6 @@
 package com.bookstore.pos.repository;
 
+import com.bookstore.demo.repository.BookRepository;
 import com.bookstore.pos.model.Review;
 import com.bookstore.demo.model.Book;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,9 @@ class ReviewRepositoryIT {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    private BookRepository books;
+
     /**
      * Verifies that {@link ReviewRepository#findByBookId(Long)} returns reviews
      * associated with a specific book.
@@ -31,6 +35,7 @@ class ReviewRepositoryIT {
     void findByBookId_returnsMatchingReviews() {
         Book book = new Book();
         ReflectionTestUtils.setField(book, "id", 10L);
+
 
         Review review = new Review();
         review.setBook(book);
