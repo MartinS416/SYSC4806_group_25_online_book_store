@@ -243,6 +243,7 @@ public class CartService {
      */
     @Transactional
     public int checkout(Long cartId, Address address) {
+
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found: " + cartId));
 
@@ -251,41 +252,41 @@ public class CartService {
             throw new IllegalStateException("Cannot checkout an empty cart");
         }
 
-        // Save address
         addressRepository.save(address);
 
-        // Create order
         Order order = new Order();
         order.setCustomer(cart.getCustomer());
         order.setAddress(address);
         order.setCreatedAt(Instant.now());
 
-        // Fill snapshot details
         order.setName(address.getFirstName() + " " + address.getLastName());
         order.setEmail(cart.getCustomer().getEmail());
         order.setPhone(cart.getCustomer().getPhone());
 
-        // Save empty order first (needed for FK)
-        orderRepository.save(order);
+         Order savedOrder = orderRepository.save(order);
 
         int count = 0;
+
         for (CartItem ci : items) {
 
             OrderLine line = new OrderLine();
+            line.setOrder(savedOrder); // Use the saved order
             line.setBook(ci.getBook());
             line.setQuantity(ci.getQuantity());
             line.setPrice(ci.getBook().getPrice());
-            line.setSubtotal(ci.getBook().getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            line.setSubtotal(ci.getBook().getPrice()
+                    .multiply(BigDecimal.valueOf(ci.getQuantity())));
 
-            // Add line to order (updates totalAmount)
-            order.addOrderLine(line);
+            savedOrder.addOrderLine(line);
+
+            orderLineRepository.save(line);
+
+            count++;
         }
-
-        // Save again after lines were added
-        orderRepository.save(order);
 
         return count;
     }
+
 
     /**
      * Periodically clears carts that have been idle for at least two scheduled runs.

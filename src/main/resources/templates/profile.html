@@ -131,6 +131,116 @@
 
     </div>
 </div>
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h4 class="mb-3">Your Past Orders</h4>
+
+            <div th:if="${#lists.isEmpty(orders)}">
+                <p class="text-muted">You haven't placed any orders yet.</p>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(orders)}" class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Shipping Address</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="o : ${orders}"
+                        class="order-row"
+                        style="cursor: pointer;"
+                        th:data-orderid="${o.id}">
+                        <td th:text="${o.id}"></td>
+
+                        <td th:text="${#temporals.format(o.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+
+                        <td>
+                            <span class="badge bg-secondary" th:text="${o.status}"></span>
+                        </td>
+
+                        <td>$<span th:text="${o.totalAmount}"></span></td>
+
+                        <td th:text="${o.address.street + ', ' + o.address.city}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Order Details – #<span id="modalOrderId"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                    <tr>
+                        <th>Book</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody id="orderItemsBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        document.querySelectorAll(".order-row").forEach(row => {
+            row.addEventListener("click", async () => {
+
+                const id = row.dataset.orderid;
+
+                const response = await fetch(`/profile/orders/${id}/items`);
+                const items = await response.json();
+
+                document.getElementById("modalOrderId").textContent = id;
+
+                const body = document.getElementById("orderItemsBody");
+                body.innerHTML = "";
+
+                items.forEach(line => {
+                    body.innerHTML += `
+                        <tr>
+                            <td>${line.title}</td>
+                            <td>${line.quantity}</td>
+                            <td>$${line.price}</td>
+                            <td>$${line.subtotal}</td>
+                        </tr>
+                    `;
+                });
+
+                new bootstrap.Modal(document.getElementById("orderModal")).show();
+            });
+        });
+
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </html>
