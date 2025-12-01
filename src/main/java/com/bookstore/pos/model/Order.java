@@ -35,8 +35,8 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.NEW;
 
-    @Column(precision = 12, scale = 2)
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal totalAmount;
 
     private Instant createdAt = Instant.now();
 
