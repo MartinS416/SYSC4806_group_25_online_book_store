@@ -207,7 +207,7 @@ erDiagram
     CUSTOMER ||--o{ PASSWORD_RESET_TOKEN : "requests"
 ```
 
-**View full Data Design**: [Data-Design-(Normalized-Schema-%E2%80%90-3NF-Form)](https://github.com/MartinS416/SYSC4806_group_25_online_book_store/wiki/Data-Design-(Normalized-Schema-%E2%80%90-3NF-Form))
+**View full Data Design**: [Data-Design-(Normalized-Schema-3NF-Form)](https://github.com/MartinS416/SYSC4806_group_25_online_book_store/wiki/Data-Design-(Normalized-Schema-%E2%80%90-3NF-Form))
 
 ### 3.3. Component Interaction Diagram (High-Level)
 
@@ -267,7 +267,7 @@ Test Classes by Package:
 ```
 
 **See**: [Test Design Specification (TDS) v3.2](https://github.com/MartinS416/SYSC4806_group_25_online_book_store/wiki/Test-Design-Specification-(TDS))  
-**See**: [V&V Plan v3.2]https://github.com/MartinS416/SYSC4806_group_25_online_book_store/wiki/Verification-and-Validation-(V&V)-Plan)
+**See**: [V&V Plan v3.2](https://github.com/MartinS416/SYSC4806_group_25_online_book_store/wiki/Verification-and-Validation-(V&V)-Plan)
 
 ---
 
