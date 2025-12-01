@@ -16,13 +16,26 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Integration tests for admin flows (authentication + admin UI).
+ *
+ * <h2>Test Category:</h2> Integration Tests (IT) – Web/MVC + Security.
+ * <h2>Scope:</h2>
+ * <ul>
+ *   <li>Admin login via /login form.</li>
+ *   <li>Authorization rules for /admin and related pages.</li>
+ *   <li>Admin book and customer management endpoints.</li>
+ * </ul>
+ * <h2>Dependencies:</h2>
+ * Full Spring Boot context, security config, MVC stack, {@link CustomerRepository}, {@link PasswordEncoder}.
+ */
 @SpringBootTest(properties = {
         "spring.sql.init.mode=never",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 @AutoConfigureMockMvc
 @Transactional
-public class AdminIntegrationTest {
+public class AdministrationIT {
 
     @Autowired MockMvc mvc;
     @Autowired CustomerRepository customerRepo;
