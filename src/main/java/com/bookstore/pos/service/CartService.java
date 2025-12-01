@@ -1,7 +1,9 @@
 package com.bookstore.pos.service;
 
-import com.bookstore.demo.model.*;
-import com.bookstore.demo.repository.*;
+import com.bookstore.common.model.*;
+import com.bookstore.common.repository.*;
+import com.bookstore.inventory.model.Book;
+import com.bookstore.inventory.repository.BookRepository;
 import com.bookstore.pos.model.Cart;
 import com.bookstore.pos.model.CartItem;
 import com.bookstore.pos.model.Order;

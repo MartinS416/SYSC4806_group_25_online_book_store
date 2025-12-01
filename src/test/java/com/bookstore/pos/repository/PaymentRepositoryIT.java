@@ -1,14 +1,13 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Address;
-import com.bookstore.demo.model.Customer;
-import com.bookstore.demo.repository.AddressRepository;
-import com.bookstore.demo.repository.CustomerRepository;
+import com.bookstore.common.model.Address;
+import com.bookstore.common.model.Customer;
+import com.bookstore.common.repository.AddressRepository;
+import com.bookstore.common.repository.CustomerRepository;
 import com.bookstore.pos.model.Order;
 import com.bookstore.pos.model.OrderStatus;
 import com.bookstore.pos.model.Payment;
 import com.bookstore.pos.model.PaymentStatus;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

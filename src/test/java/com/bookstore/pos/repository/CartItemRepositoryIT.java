@@ -1,9 +1,6 @@
 package com.bookstore.pos.repository;
 
-import com.bookstore.demo.model.Book;
-import com.bookstore.demo.model.Customer;
-import com.bookstore.demo.repository.BookRepository;
-import com.bookstore.demo.repository.CustomerRepository;
+import com.bookstore.inventory.model.Book;
 import com.bookstore.pos.model.Cart;
 import com.bookstore.pos.model.CartItem;
 import org.junit.jupiter.api.Test;
@@ -32,26 +29,17 @@ class CartItemRepositoryIT {
     @Autowired
     private CartItemRepository cartItemRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private BookRepository books;
-
     /**
      * Verifies that {@link CartItemRepository#findByCartId(Long)} returns
      * all items for the specified cart id.
      */
     @Test
     void findByCartId_returnsItemsForCart() {
-        Customer customer = new Customer();
-        customerRepository.save(customer);
-        Cart cart = new Cart(customer);
+        Cart cart = new Cart(null);
         cart = cartRepository.save(cart);
 
         Book book = new Book();
         book.setPrice(BigDecimal.TEN);
-        books.save(book);
 
         CartItem item = new CartItem();
         item.setCart(cart);
@@ -71,9 +59,7 @@ class CartItemRepositoryIT {
      */
     @Test
     void findByCartIdAndBookId_returnsMatchingItem() {
-        Customer customer = new Customer();
-        customerRepository.save(customer);
-        Cart cart = new Cart(customer);
+        Cart cart = new Cart(null);
         cart = cartRepository.save(cart);
 
         Book book = new Book();
@@ -99,16 +85,10 @@ class CartItemRepositoryIT {
      */
     @Test
     void deleteByCartId_removesAllItemsForCart() {
-        Customer customer = new Customer();
-        customerRepository.save(customer);
-        Cart cart = new Cart(customer);
+        Cart cart = new Cart(null);
         cart = cartRepository.save(cart);
 
-        Book book = new Book();
-        books.save(book);
-
         CartItem item = new CartItem();
-        item.setBook(book);
         item.setCart(cart);
         cartItemRepository.save(item);
 

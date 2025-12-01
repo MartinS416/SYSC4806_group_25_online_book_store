@@ -1,6 +1,6 @@
 package com.bookstore.pos.service;
 
-import com.bookstore.demo.model.Book;
+import com.bookstore.inventory.model.Book;
 import com.bookstore.pos.model.Review;
 import com.bookstore.pos.repository.ReviewRepository;
 import org.springframework.stereotype.Service;

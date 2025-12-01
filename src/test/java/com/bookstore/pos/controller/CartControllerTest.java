@@ -1,11 +1,11 @@
 package com.bookstore.pos.controller;
 
-import com.bookstore.demo.model.Book;
-import com.bookstore.demo.model.Customer;
-import com.bookstore.demo.repository.AddressRepository;
-import com.bookstore.demo.repository.BookRepository;
-import com.bookstore.demo.repository.CustomerRepository;
-import com.bookstore.demo.security.CustomUserDetails;
+import com.bookstore.inventory.model.Book;
+import com.bookstore.common.model.Customer;
+import com.bookstore.common.repository.AddressRepository;
+import com.bookstore.inventory.repository.BookRepository;
+import com.bookstore.common.repository.CustomerRepository;
+import com.bookstore.security.CustomUserDetails;
 import com.bookstore.pos.model.Cart;
 import com.bookstore.pos.service.CartService;
 import com.bookstore.pos.service.PaymentService;
@@ -160,7 +160,7 @@ class CartControllerTest {
      * <ul>
      *     <li>validates the card.</li>
      *     <li>checks the cart is not empty.</li>
-     *     <li>invokes {@link CartService#checkout(Long, com.bookstore.demo.model.Address)},</li>
+     *     <li>invokes {@link CartService#checkout(Long, com.bookstore.common.model.Address)},</li>
      *     <li>clears the cart, and</li>
      *     <li>redirects to the shop with a {@code paid=true} flag.</li>
      * </ul>
