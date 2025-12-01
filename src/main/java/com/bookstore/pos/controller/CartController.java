@@ -1,5 +1,6 @@
 package com.bookstore.pos.controller;
 
+import com.bookstore.pos.model.CartItem;
 import com.bookstore.pos.model.Order;
 import com.bookstore.demo.model.Address;
 import com.bookstore.demo.model.Book;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Web controller for cart-related operations backed by persistent Cart entities.
@@ -152,9 +155,16 @@ public class CartController {
             if (!unit.isEmpty()){
                 billing.setUnit(unit);
             }
+
+            List<CartItem> items = cart.getItems();
+            if (items == null || items.isEmpty()) {
+                return "redirect:/cart?result=2";
+            }
             try {
                 cartService.checkout(cart.getId(), billing);
+                System.out.println("wee");
             } catch (Exception e) {
+                System.out.println("e");
                 if(e instanceof IllegalStateException){
                     return "redirect:/cart?result=2";
                 } else {
