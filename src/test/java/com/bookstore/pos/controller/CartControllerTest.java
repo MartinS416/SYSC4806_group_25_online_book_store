@@ -217,7 +217,7 @@ class CartControllerTest {
                         .param("country", "CA")
                         .param("postal", "A1A1A1"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/cart?error=card_expired"));
+                .andExpect(redirectedUrl("/cart?result=1"));
 
         verify(cartService).checkCard(anyString(), anyString(), anyString());
         verify(cartService, never()).checkout(anyLong(), any());
@@ -248,7 +248,7 @@ class CartControllerTest {
                         .param("country", "CA")
                         .param("postal", "A1A1A1"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/cart?error=empty_cart"));
+                .andExpect(redirectedUrl("/cart?result=2"));
 
         verify(cartService).checkCard(anyString(), anyString(), anyString());
         verify(cartService).getDetailedCart(cart.getId());
