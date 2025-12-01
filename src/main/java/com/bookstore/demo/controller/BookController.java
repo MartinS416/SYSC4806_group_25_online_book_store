@@ -35,14 +35,25 @@ public class BookController {
         double averageRating = reviews.isEmpty() ? 0 :
                 reviews.stream().mapToInt(Review::getRating).average().orElse(0);
 
-        // Rating breakdown (index 0 = 5★, index 4 = 1★)
+        // Rating breakdown (5★ to 1★)
         long[] breakdown = new long[5];
         reviews.forEach(r -> breakdown[5 - r.getRating()]++);
+
+        // ★★★ ADD THIS — This fixes the 500 error ★★★
+        double[] barWidth = new double[5];
+        int totalReviews = reviews.size();
+
+        if (totalReviews > 0) {
+            for (int i = 0; i < 5; i++) {
+                barWidth[i] = (breakdown[i] * 100.0) / totalReviews;
+            }
+        }
 
         model.addAttribute("book", book);
         model.addAttribute("reviews", reviews);
         model.addAttribute("averageRating", averageRating);
         model.addAttribute("breakdown", breakdown);
+        model.addAttribute("barWidth", barWidth);  // ★ REQUIRED BY TEMPLATE ★
 
         return "book-details";
     }
@@ -55,7 +66,7 @@ public class BookController {
 
         Book book = bookRepository.findById(id).orElse(null);
         if (book == null) {
-            return "redirect:/shop";  // safety
+            return "redirect:/shop";
         }
 
         reviewService.addReview(book, reviewerName, content, rating);
